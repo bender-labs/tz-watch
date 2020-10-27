@@ -1,0 +1,9 @@
+source https://api.nuget.org/v3/index.json
+
+nuget FSharp.Control.Reactive 4.4.2
+nuget FSharp.Core
+nuget FSharp.Data 3.3.3
+nuget FSharpx.Extras 2.5.0
+nuget Microsoft.Extensions.Hosting.WindowsServices 3.1.9
+nuget Netezos.rpc 1.1.2
+nuget System.Net.NameResolution 4.3.0

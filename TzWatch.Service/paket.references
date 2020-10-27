@@ -1,0 +1,7 @@
+FSharp.Data
+Microsoft.Extensions.Hosting.WindowsServices
+Netezos.rpc
+System.Net.NameResolution
+FSharp.Core
+FSharpx.Extras
+FSharp.Control.Reactive

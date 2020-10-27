@@ -1,0 +1,39 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26124.0
+MinimumVisualStudioVersion = 15.0.26124.0
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{E25B37FC-C231-4D13-97CF-262BA40A5436}"
+	ProjectSection(SolutionItems) = preProject
+		paket.dependencies = paket.dependencies
+	EndProjectSection
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TzWatch.Service", "TzWatch.Service\TzWatch.Service.fsproj", "{7BC51329-0B64-404A-A910-3B7C211957BA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Debug|x64.Build.0 = Debug|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Debug|x86.Build.0 = Debug|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Release|x64.ActiveCfg = Release|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Release|x64.Build.0 = Release|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Release|x86.ActiveCfg = Release|Any CPU
+		{7BC51329-0B64-404A-A910-3B7C211957BA}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,19 @@
+{
+  "protocol": "PsCARTHAGazKbHtnKfLzQg3kms52kSRpgnDY982a9oYsSXRLQEb",
+  "chain_id": "NetXjD3HPJJjmcd",
+  "hash": "BKw9hkVaz7rQkWV6kYFZrACs47NwKExWrwStHf663LnronN2uPa",
+  "level": 806377,
+  "proto": 2,
+  "predecessor": "BMVLWRAj9gk4bnBbpfgasBz2sJJ9dv6WnXkcyNiDYyd69GiQSu8",
+  "timestamp": "2020-10-15T15:14:03Z",
+  "validation_pass": 4,
+  "operations_hash": "LLoZkVrBucFVfo7EHJg19o1Sdvdog6jaTEXBShGZtyxnWk2PHnVYt",
+  "fitness": [
+    "01",
+    "00000000000c4de8"
+  ],
+  "context": "CoVj7z1aaknY7zgzkhJhMvP7ADzGeVryP3NPu8gzqQGbupY542oh",
+  "priority": 0,
+  "proof_of_work_nonce": "ba45727c6ead0600",
+  "signature": "sigpDrctvEpfD7uKMuYZETupiJUZS5mrJCUEk5dga9ipp6ria9NtUeSe5JZ8U5QJks1vg163mjyj69ozVJtYF5TohCxkhVoJ"
+}

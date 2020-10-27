@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Node\data" />
+    <Compile Include="Node\Node.Types.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Model\Public.Types.fs" />
+    <Compile Include="Model\Model.Types.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program\MainLoop.fs" />
+    <Compile Include="Sync\Poller.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <Import Project="..\.paket\Paket.Restore.targets" />
+</Project>
