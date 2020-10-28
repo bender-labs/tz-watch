@@ -19,12 +19,11 @@ type Worker(logger: ILogger<Worker>, subLogger: ILogger<MainLoop>) =
 
         let sync = SyncNode rpc
         
-        let poller = poll rpc
         let mainLoop = MainLoop(sync, subLogger)
         mainLoop.Send
             (Subscribe
                 ({ Address = "KT"
-                   Level = Some 142874
+                   Level = Some 145748
                    Confirmations = 3 }))
 
         let f: Async<unit> =

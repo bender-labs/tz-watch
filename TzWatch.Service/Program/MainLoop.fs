@@ -2,11 +2,8 @@ namespace TzWatch.Service.Program
 
 
 open FSharp.Control
-open FSharp.Control.Reactive
 open Microsoft.Extensions.Logging
 open TzWatch.Service.Model
-open FSharpx.Control.Observable
-open FSharpx.Async
 
 type Message = Subscribe of CreateSubscription
 

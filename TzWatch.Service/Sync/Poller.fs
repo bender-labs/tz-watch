@@ -2,7 +2,6 @@ module TzWatch.Service.Sync
 
 open System
 open System.Reactive.Linq
-open System.Security.Cryptography.X509Certificates
 open FSharp.Control
 open FSharp.Control.Reactive
 
@@ -14,10 +13,13 @@ open TzWatch.Service.Node.Types
 type SyncNode(node: TezosRpc) =
 
     let obs =
-        Observable.create (fun observer () ->
+        Observable.create (fun observer ->
             let rec loop (level: int option) =
                 async {
-                    let! headJson = node.Blocks.Head.GetAsync() |> Async.AwaitTask
+                    let! headJson =
+                        node.Blocks.Head.Header.GetAsync()
+                        |> Async.AwaitTask
+
                     let head = headJson.ToString() |> Header.Parse
 
                     match level with
@@ -30,7 +32,7 @@ type SyncNode(node: TezosRpc) =
 
                         do! Async.Sleep(TimeSpan.FromSeconds(30.0).Milliseconds)
                     | Some i ->
-                        if head.Level = i then
+                        if head.Level > i then
                             let! block =
                                 node.Blocks.Head.Operations.[3].GetAsync()
                                 |> Async.AwaitTask
@@ -42,7 +44,8 @@ type SyncNode(node: TezosRpc) =
                     return! loop (Some head.Level)
                 }
 
-            loop None |> ignore)
+            let dispose = loop None |> Async.StartDisposable
+            dispose.Dispose)
 
     let obs' =
         let rec pollHead (observer: IObserver<_>) (level: int option) =
@@ -82,16 +85,14 @@ type SyncNode(node: TezosRpc) =
 
     interface Sync with
         member this.Head =
-            let published = obs' |> Observable.Publish
+            let published = obs |> Observable.Publish
             published.Connect() |> ignore
             published
 
 
         member this.From(level: int) =
-            asyncSeq {
-                let mutable finish = false
-                let mutable current = level
-                while not finish do
+            let rec loop (current: int) =
+                asyncSeq {
                     let! head =
                         node.Blocks.Head.Header.GetAsync()
                         |> Async.AwaitTask
@@ -103,34 +104,7 @@ type SyncNode(node: TezosRpc) =
                         |> Async.AwaitTask
 
                     yield value
+                    if current < header.Level then yield! loop (current + 1)
+                }
 
-                    finish <- current = header.Level
-                    current <- current + 1
-            }
-
-
-
-
-let poll (node: TezosRpc) (level: Level) =
-    asyncSeq {
-        let! head =
-            node.Blocks.Head.Header.GetAsync()
-            |> Async.AwaitTask
-
-        let header = Header.Parse(head.ToString())
-
-        match level with
-        | Height i ->
-            for curr in seq { i .. header.Level } do
-                let! value =
-                    node.Blocks.[i].Operations.[3].GetAsync()
-                    |> Async.AwaitTask
-
-                yield value
-        | Head ->
-            let! value =
-                node.Blocks.Head.Operations.[3].GetAsync()
-                |> Async.AwaitTask
-
-            yield value
-    }
+            loop (level)

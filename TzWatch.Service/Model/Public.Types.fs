@@ -1,8 +1,6 @@
 namespace TzWatch.Service.Model
 
 
-open System
-open System.Reactive.Subjects
 open System.Reactive.Subjects
 open FSharp.Control
 open Newtonsoft.Json.Linq
@@ -21,8 +19,6 @@ type Level =
         match value with
         | Some i -> Height i
         | None -> Head
-
-type Poller = Level -> AsyncSeq<JToken>
 
 type Sync =
     abstract Head: IConnectableObservable<JToken>
