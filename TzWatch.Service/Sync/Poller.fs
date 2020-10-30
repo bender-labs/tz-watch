@@ -7,7 +7,7 @@ open FSharp.Control.Reactive
 
 open FSharpx.Control
 open Netezos.Rpc
-open TzWatch.Service.Model
+open TzWatch.Service.Domain
 open TzWatch.Service.Node.Types
 
 type SyncNode(node: TezosRpc) =
@@ -55,7 +55,6 @@ type SyncNode(node: TezosRpc) =
                     |> Async.AwaitTask
 
                 let head = headJson.ToString() |> Header.Parse
-
                 match level with
                 | None ->
                     let! block =

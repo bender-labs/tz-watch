@@ -9,8 +9,8 @@
     <Compile Include="Node\Node.Types.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Model\Public.Types.fs" />
-    <Compile Include="Model\Model.Types.fs" />
+    <Compile Include="Domain\Types.fs" />
+    <Compile Include="Domain\Subscription.fs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program\MainLoop.fs" />

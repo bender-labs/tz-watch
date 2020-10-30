@@ -1,31 +1,19 @@
 namespace TzWatch.Service.Program
 
-
 open FSharp.Control
 open Microsoft.Extensions.Logging
-open TzWatch.Service.Model
+open TzWatch.Service.Domain
+open FsToolkit.ErrorHandling
 
 type Message = Subscribe of CreateSubscription
 
 module CommandHandler =
     let subscribe (poller: Sync) (log: string -> unit) (command: CreateSubscription) =
-        async {
-            match ContractAddress.create command.Address with
-            | Some a ->
-                let s =
-                    Subscription.create a (Level.ToLevel command.Level) (fun s -> async { log s })
-
-                let handler = Subscription.``process`` s
-
-                match Subscription.level s with
-                | Height i -> do! poller.From i |> AsyncSeq.iterAsync handler
-
-                | _ -> ()
-                log "at head"
-                return Ok(poller.Head.Subscribe(fun e -> (handler e) |> Async.StartImmediate))
-            | None -> return Error "nop"
+        result {
+            let! address = ContractAddress.create command.Address
+            let! sub = Subscription.create address (Level.ToLevel command.Level) (fun s -> async { log s })
+            return Subscription.run sub poller
         }
-
 
 type MainLoop(poller: Sync, log: ILogger<MainLoop>) =
 
@@ -38,10 +26,17 @@ type MainLoop(poller: Sync, log: ILogger<MainLoop>) =
                 async {
                     let! msg = inbox.Receive()
 
-                    match msg with
-                    | Subscribe c -> (subscribe c) |> Async.StartAsTask |> ignore
+                    (log.LogInformation "Message {msg}", msg)
+                    |> ignore
 
-                    log.LogInformation("Message {msg}", msg)
+                    match msg with
+                    | Subscribe c ->
+                        (subscribe c)
+                        |> Result.mapError (fun e -> log.LogError("Error {e}", e))
+                        |> Result.bind (fun workflow ->
+                            Async.Start workflow
+                            Ok workflow)
+                        |> ignore
 
                     return! messageLoop ()
                 }

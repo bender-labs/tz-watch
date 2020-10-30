@@ -1,13 +1,10 @@
-namespace TzWatch.Service.Model
+namespace TzWatch.Service.Domain
 
 open Newtonsoft.Json.Linq
-open TzWatch.Service.Model
 open TzWatch.Service.Node.Types
+open FSharp.Control
 
-type ContractAddress = private ContractAddress of string
-
-
-type Filter = Operation -> bool
+type Filter = Operation -> bool    
 
 type SubscriptionParameters =
     private { Contract: ContractAddress
@@ -30,7 +27,7 @@ module Subscription =
               Level = level
               Filters = [] }
 
-        { Parameters = parameters; Level = 0 }
+        Ok { Parameters = parameters; Level = 0 }
 
 
     let value { Contract = contract; Level = level; Confirmations = confirmations } =
@@ -38,12 +35,9 @@ module Subscription =
            level = level
            confirmations = confirmations |}
 
-    let (|Record|) { Contract = contract; Level = level; Confirmations = confirmations } =
-        struct (contract, level, confirmations)
-
     let send { Channel = channel } value = channel value
 
-    let ``process`` (s: Subscription) (o: JToken) = s.Parameters.Channel (o.ToString())
+    let ``process`` (s: Subscription) (o: JToken) = s.Parameters.Channel(o.ToString())
 
     let level { Parameters = parameters } = parameters.Level
 
@@ -51,10 +45,11 @@ module Subscription =
         subscription.Level <- level
         subscription
 
-module ContractAddress =
-    open System
-
-    let create value =
-        if String.IsNullOrEmpty(value) then None else Some(ContractAddress value)
-
-    let value (ContractAddress addr) = addr
+    let run (subscription: Subscription) (poller: Sync) =
+        async {
+            let handler = ``process`` subscription
+            match subscription.Parameters.Level with
+            | Height i -> do! poller.From i |> AsyncSeq.iterAsync handler
+            | _ -> ()
+            poller.Head.Subscribe(fun e -> (handler e) |> Async.StartImmediate)
+        }
