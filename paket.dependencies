@@ -5,6 +5,8 @@ nuget FSharp.Core
 nuget FSharp.Data 3.3.3
 nuget FSharpx.Extras 2.5.0
 nuget FsToolkit.ErrorHandling 1.4.3
+nuget FsUnit 4.0.1
 nuget Microsoft.Extensions.Hosting.WindowsServices 3.1.9
+nuget Microsoft.NET.Test.Sdk 16.7.1
 nuget Netezos.rpc 1.1.2
 nuget System.Net.NameResolution 4.3.0

@@ -55,6 +55,7 @@ type SyncNode(node: TezosRpc) =
                     |> Async.AwaitTask
 
                 let head = headJson.ToString() |> Header.Parse
+
                 match level with
                 | None ->
                     let! block =
@@ -82,7 +83,7 @@ type SyncNode(node: TezosRpc) =
                 pollHead observer None |> Async.StartDisposable }
 
 
-    interface Sync with
+    interface ISync with
         member this.Head =
             let published = obs |> Observable.Publish
             published.Connect() |> ignore
@@ -103,7 +104,32 @@ type SyncNode(node: TezosRpc) =
                         |> Async.AwaitTask
 
                     yield value
+
                     if current < header.Level then yield! loop (current + 1)
+                }
+
+            loop (level)
+
+        member this.CatchupFrom(level: Level) =
+            let rec loop (current: Level) =
+                asyncSeq {
+                    let! head =
+                        node.Blocks.Head.Header.GetAsync()
+                        |> Async.AwaitTask
+
+                    let header = Header.Parse(head.ToString())
+
+                    let actualLevel =
+                        match current with
+                        | Height i -> i
+                        | Head -> header.Level
+                    if actualLevel > header.Level then
+                        do! Async.Sleep(TimeSpan.FromSeconds(30.0).Milliseconds)
+                        yield! loop(Height actualLevel)
+                    else     
+                        let! value = node.Blocks.[actualLevel].Operations.[3].GetAsync() |> Async.AwaitTask
+                        yield value
+                    yield! loop(Height (actualLevel + 1))
                 }
 
             loop (level)

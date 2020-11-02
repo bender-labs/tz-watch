@@ -10,6 +10,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".paket", ".paket", "{E25B37
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TzWatch.Service", "TzWatch.Service\TzWatch.Service.fsproj", "{7BC51329-0B64-404A-A910-3B7C211957BA}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "TzWatch.Test", "TzWatch.Test\TzWatch.Test.fsproj", "{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,5 +37,17 @@ Global
 		{7BC51329-0B64-404A-A910-3B7C211957BA}.Release|x64.Build.0 = Release|Any CPU
 		{7BC51329-0B64-404A-A910-3B7C211957BA}.Release|x86.ActiveCfg = Release|Any CPU
 		{7BC51329-0B64-404A-A910-3B7C211957BA}.Release|x86.Build.0 = Release|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Debug|x64.Build.0 = Debug|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Debug|x86.Build.0 = Debug|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Release|x64.ActiveCfg = Release|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Release|x64.Build.0 = Release|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Release|x86.ActiveCfg = Release|Any CPU
+		{87F0F5DF-F2E4-42C6-BD6F-96F181322A11}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -3,19 +3,20 @@ namespace TzWatch.Service.Program
 open FSharp.Control
 open Microsoft.Extensions.Logging
 open TzWatch.Service.Domain
+open TzWatch.Service.Domain.Command
 open FsToolkit.ErrorHandling
 
 type Message = Subscribe of CreateSubscription
 
 module CommandHandler =
-    let subscribe (poller: Sync) (log: string -> unit) (command: CreateSubscription) =
+    let subscribe (poller: ISync) (log: string -> unit) (command: CreateSubscription) =
         result {
             let! address = ContractAddress.create command.Address
             let! sub = Subscription.create address (Level.ToLevel command.Level) (fun s -> async { log s })
-            return Subscription.run sub poller
+            return Subscription.run sub poller (Level.ToLevel command.Level)
         }
 
-type MainLoop(poller: Sync, log: ILogger<MainLoop>) =
+type MainLoop(poller: ISync, log: ILogger<MainLoop>) =
 
     let subscribe =
         CommandHandler.subscribe poller log.LogInformation
@@ -31,7 +32,7 @@ type MainLoop(poller: Sync, log: ILogger<MainLoop>) =
 
                     match msg with
                     | Subscribe c ->
-                        (subscribe c)
+                        subscribe c
                         |> Result.mapError (fun e -> log.LogError("Error {e}", e))
                         |> Result.bind (fun workflow ->
                             Async.Start workflow

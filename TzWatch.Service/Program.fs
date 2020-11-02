@@ -22,7 +22,7 @@ type Worker(logger: ILogger<Worker>, subLogger: ILogger<MainLoop>) =
         let mainLoop = MainLoop(sync, subLogger)
         mainLoop.Send
             (Subscribe
-                ({ Address = "KT"
+                ({ Address = "KT1L75tfiRvokyYF9bmw2CrTHtyVDTYqftLa"
                    Level = Some 145748
                    Confirmations = 3 }))
 

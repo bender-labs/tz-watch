@@ -10,12 +10,6 @@ module Types =
 
     type Channel = string -> Async<Unit>
     
-    type CreateSubscription =
-        { Address: string
-          Level: int option
-          Confirmations: int }
-
-    
     type Level =
         | Head
         | Height of int
@@ -24,9 +18,10 @@ module Types =
             | Some i -> Height i
             | None -> Head
 
-    type Sync =
+    type ISync =
         abstract Head: IConnectableObservable<JToken>
         abstract From: int -> AsyncSeq<JToken>
+        abstract CatchupFrom: Level -> AsyncSeq<JToken>
 
     type ContractAddress = private ContractAddress of string
     
@@ -34,5 +29,7 @@ module Types =
 
         let create value =
             if String.IsNullOrEmpty(value) then Error "Bad Address" else Ok (ContractAddress value)
+            
+        let createUnsafe value = ContractAddress value
 
         let value (ContractAddress addr) = addr

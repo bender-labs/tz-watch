@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="Domain\Types.fs" />
     <Compile Include="Domain\Subscription.fs" />
+    <Compile Include="Domain\Subscription.Command.fs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program\MainLoop.fs" />
