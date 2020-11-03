@@ -52,13 +52,13 @@ module Subscription =
         interests
         |> List.fold (fun acc i ->
             acc
-            && match i with
+            || match i with
                | EntryPoint v ->
                    not (isNull operation.["parameters"])
                    && operation.["parameters"].["entrypoint"].Value<string>() = v
                | _ -> false
 
-            ) true
+            ) false
 
     let applyBlock (s: Subscription) (block: Block): (Subscription * Update seq) =
         let t =
