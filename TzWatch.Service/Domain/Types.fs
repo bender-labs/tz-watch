@@ -1,15 +1,18 @@
 namespace TzWatch.Service.Domain
+
 open System
 
 [<AutoOpen>]
 module Types =
-    
+
     open System.Reactive.Subjects
     open FSharp.Control
     open Newtonsoft.Json.Linq
 
     type Channel = string -> Async<Unit>
-    
+
+    type Block = { Level: int; Operations: JToken }
+
     type Level =
         | Head
         | Height of int
@@ -21,15 +24,15 @@ module Types =
     type ISync =
         abstract Head: IConnectableObservable<JToken>
         abstract From: int -> AsyncSeq<JToken>
-        abstract CatchupFrom: Level -> AsyncSeq<JToken>
+        abstract CatchupFrom: Level -> AsyncSeq<Block>
 
     type ContractAddress = private ContractAddress of string
-    
+
     module ContractAddress =
 
         let create value =
-            if String.IsNullOrEmpty(value) then Error "Bad Address" else Ok (ContractAddress value)
-            
+            if String.IsNullOrEmpty(value) then Error "Bad Address" else Ok(ContractAddress value)
+
         let createUnsafe value = ContractAddress value
 
         let value (ContractAddress addr) = addr

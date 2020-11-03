@@ -7,9 +7,6 @@ open TzWatch.Service.Domain
 open TzWatch.Service.Node.Types
 open FSharp.Control
 
-type Filter = Operation -> bool
-
-
 type Interest =
     | EntryPoint of string
     | Balance
@@ -40,48 +37,58 @@ and UpdateValue =
 type Subscription =
     { Parameters: SubscriptionParameters
       Channel: Channel
-      PendingOperations: Map<int, Operation List>
-      Level: int }
+      PendingOperations: Map<int, UpdateValue seq> }
 
 
 module Subscription =
-    let create contract level channel =
-        let parameters =
-            { Contract = contract
-              Confirmations = 30
-              Interests = [] }
-
-        Ok
-            { Parameters = parameters
-              Channel = channel
-              Level = 0
-              PendingOperations = Map.empty }
+    let create parameters channel =
+        { Parameters = parameters
+          Channel = channel
+          PendingOperations = Map.empty }
 
     let send { Channel = channel } value = channel value
 
-    let applyBlock (s: Subscription) (level: int) (block: JToken): (Subscription * Update seq) =
+    let private check (interests: Interest list) (operation: JToken) =
+        interests
+        |> List.fold (fun acc i ->
+            acc
+            && match i with
+               | EntryPoint v ->
+                   not (isNull operation.["parameters"])
+                   && operation.["parameters"].["entrypoint"].Value<string>() = v
+               | _ -> false
+
+            ) true
+
+    let applyBlock (s: Subscription) (block: Block): (Subscription * Update seq) =
         let t =
-            block
+            block.Operations
             |> Seq.collect (fun o -> o.["contents"])
             |> Seq.filter (fun e -> e.Value("kind") = "transaction")
             |> Seq.filter (fun e -> e.Value("destination") = (ContractAddress.value s.Parameters.Contract))
-            |> Seq.filter (fun e -> not (isNull e.["parameters"]))
+            |> Seq.filter (fun e -> check s.Parameters.Interests e)
             |> Seq.map
                 ((fun e ->
                     EntryPointCall
                         { Entrypoint = e.SelectToken("parameters.entrypoint").ToString()
-                          Parameters = e.SelectToken("parameters.value") })
-                 >> (fun u -> { Confirmations = 1; Value = u }))
+                          Parameters = e.SelectToken("parameters.value") }))
 
-        (s, t)
+        if s.Parameters.Confirmations > 1 then
+            ({ s with
+                   PendingOperations = s.PendingOperations.Add(block.Level, t) },
+             Seq.empty)
+        else
+            (s,
+             t
+             |> Seq.map (fun u -> { Confirmations = 1; Value = u }))
 
 
     let run (subscription: Subscription) (poller: ISync) (level: Level) =
-        let polling: JToken AsyncSeq = poller.CatchupFrom level
+        let polling = poller.CatchupFrom level
 
-        let handler (subscription: Subscription) (block: JToken) =
+        let handler (subscription: Subscription) (block: Block) =
             async {
-                let (newState, updates) = applyBlock subscription 1 block
+                let (newState, updates) = applyBlock subscription block
                 for e in updates do
                     do! send subscription (JsonConvert.SerializeObject e)
 

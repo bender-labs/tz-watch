@@ -12,7 +12,12 @@ module CommandHandler =
     let subscribe (poller: ISync) (log: string -> unit) (command: CreateSubscription) =
         result {
             let! address = ContractAddress.create command.Address
-            let! sub = Subscription.create address (Level.ToLevel command.Level) (fun s -> async { log s })
+            let parameters = {
+                Contract = address
+                Interests = []
+                Confirmations = 0
+            }
+            let sub = Subscription.create parameters (fun s -> async { log s })
             return Subscription.run sub poller (Level.ToLevel command.Level)
         }
 

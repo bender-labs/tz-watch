@@ -128,7 +128,7 @@ type SyncNode(node: TezosRpc) =
                         yield! loop(Height actualLevel)
                     else     
                         let! value = node.Blocks.[actualLevel].Operations.[3].GetAsync() |> Async.AwaitTask
-                        yield value
+                        yield {Level = header.Level; Operations = value}
                     yield! loop(Height (actualLevel + 1))
                 }
 
