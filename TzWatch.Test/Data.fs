@@ -138,7 +138,23 @@ let private template = """[ { "protocol": "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs
                         "paid_storage_size_diff": "99" } } ] } } ],
     "signature":
       "sigVhrq834QeG9z4X35zZieJ9wn2n5mrirAdQHWuyy2PKwTfCk9Dza9GnX1PxQNtUB12jmSY2oKT99grDXtVFozyuhbwsRV5" } ]
-""" 
+"""
+
+let private transferTemplate = """[ { "protocol": "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
+    "chain_id": "NetXm8tYqnMWky1",
+    "hash": "oom3y9QdYJmdUXzwAyYHV4K7ecbtJGqpv6yiSWxD85FB8aBXn8j",
+    "branch": "BMWMe6dAyDoryigCLCA9X7Tvy1PznnWhQXVab6SSvdnvM4YANrW",
+    "contents":
+      [ { "kind": "transaction",
+          "source": "tz1S792fHX5rvs6GYP49S1U58isZkp2bNmn6", "fee": "6199",
+          "counter": "654654", "gas_limit": "58490", "storage_limit": "166",
+          "amount": "0",
+          "destination": "#DESTINATION#",
+          }]
+    "signature":
+      "sigVhrq834QeG9z4X35zZieJ9wn2n5mrirAdQHWuyy2PKwTfCk9Dza9GnX1PxQNtUB12jmSY2oKT99grDXtVFozyuhbwsRV5" } ]
+"""
+
 open TzWatch.Service.Domain
 
 let blockWithContractAndEntryPointAtLevel level contract entryPoint =
@@ -148,3 +164,7 @@ let blockWithContractAndEntryPointAtLevel level contract entryPoint =
   { Level = level ; Operations = token}
 let blockWithContractAndEntryPoint = blockWithContractAndEntryPointAtLevel 0
 
+let blockWithContractTransfer contract =
+   let token = JToken.Parse (template
+                              .Replace("#DESTINATION#", contract))
+   {Level = 0 ; Operations = token}

@@ -56,15 +56,23 @@ module ``Subscription test`` =
 
             updates |> Seq.length |> should equal 1
             let update = updates |> Seq.head
-            update.Confirmations |> should equal 1
+            update.Hash |> should equal (block.Operations.SelectToken("$.[0].hash").ToString())
             update.Value
             |> should
                 equal
                    (EntryPointCall
                        { Entrypoint = "mint"
                          Parameters = block.Operations.SelectToken("$.[0].contents[0].parameters.value") })
+                   
+        [<Fact>]
+        let ``should ignore transfer`` () =
+            let block = blockWithContractTransfer "KT"
+            
+            let(_, updates) = Subscription.applyBlock subscription block
+            
+            updates |> Seq.length |> should equal 0
 
-    type `` Given a subscription with 2 confirmations``() =
+    type ``Given a subscription with 2 confirmations``() =
 
         let subscription =
             { Parameters =
@@ -78,11 +86,34 @@ module ``Subscription test`` =
         let ``should not trigger update on first observation``() =
             let block = blockWithContractAndEntryPointAtLevel 10 "KT" "mint"
             
-            let (newSub, updates) = Subscription.applyBlock subscription (block)
+            let (newSub, updates) = Subscription.applyBlock subscription block
             
             updates |> Seq.length |> should equal 0
             newSub.PendingOperations.[10] |> Seq.length |> should equal 1
             let pendingUpdate = newSub.PendingOperations.[10] |> Seq.head
-            pendingUpdate |> should equal (EntryPointCall
-                       { Entrypoint = "mint"
-                         Parameters = block.Operations.SelectToken("$.[0].contents[0].parameters.value") })
+            let expected = {
+                Level= 10
+                Hash="oom3y9QdYJmdUXzwAyYHV4K7ecbtJGqpv6yiSWxD85FB8aBXn8j"
+                Value = EntryPointCall {
+                         Entrypoint = "mint"
+                         Parameters = block.Operations.SelectToken("$.[0].contents[0].parameters.value")} 
+            }
+            pendingUpdate |> should equal expected
+            
+        [<Fact>]
+        let ``should trigger update on second observation``() =
+            let block = blockWithContractAndEntryPointAtLevel 10 "KT" "mint"
+            let (newSub, _) = Subscription.applyBlock subscription block
+            
+            let (sub, updates) = Subscription.applyBlock newSub (blockWithContractTransfer "")
+            
+            updates |> Seq.length |> should equal 1
+            let expected = {
+                Level= 10
+                Hash="oom3y9QdYJmdUXzwAyYHV4K7ecbtJGqpv6yiSWxD85FB8aBXn8j"
+                Value = EntryPointCall {
+                         Entrypoint = "mint"
+                         Parameters = block.Operations.SelectToken("$.[0].contents[0].parameters.value")} 
+            }
+            updates |> Seq.head |> should equal expected
+            sub.PendingOperations |> should be Empty

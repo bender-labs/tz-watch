@@ -4,7 +4,6 @@ open FSharpx.Control
 open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 open TzWatch.Service.Domain
-open TzWatch.Service.Node.Types
 open FSharp.Control
 
 type Interest =
@@ -18,7 +17,8 @@ type SubscriptionParameters =
       Confirmations: int }
 
 type Update =
-    { Confirmations: int
+    { Level: int
+      Hash: string
       Value: UpdateValue }
 
 and EntryPointCall =
@@ -37,7 +37,7 @@ and UpdateValue =
 type Subscription =
     { Parameters: SubscriptionParameters
       Channel: Channel
-      PendingOperations: Map<int, UpdateValue seq> }
+      PendingOperations: Map<int, Update seq> }
 
 
 module Subscription =
@@ -60,27 +60,29 @@ module Subscription =
 
             ) false
 
+    let private toUpdate level hash (operation: JToken) =
+        { Level = level
+          Hash = hash
+          Value =
+              EntryPointCall
+                  { Entrypoint = operation.SelectToken("parameters.entrypoint").Value<string>()
+                    Parameters = operation.SelectToken("parameters.value") } }
+
     let applyBlock (s: Subscription) (block: Block): (Subscription * Update seq) =
         let t =
             block.Operations
-            |> Seq.collect (fun o -> o.["contents"])
-            |> Seq.filter (fun e -> e.Value("kind") = "transaction")
-            |> Seq.filter (fun e -> e.Value("destination") = (ContractAddress.value s.Parameters.Contract))
-            |> Seq.filter (fun e -> check s.Parameters.Interests e)
-            |> Seq.map
-                ((fun e ->
-                    EntryPointCall
-                        { Entrypoint = e.SelectToken("parameters.entrypoint").ToString()
-                          Parameters = e.SelectToken("parameters.value") }))
+            |> Seq.collect (fun o -> o.["contents"] |> Seq.map (fun e -> (o.["hash"].Value<string>(), e)))
+            |> Seq.filter (fun (_, e) -> e.Value("kind") = "transaction")
+            |> Seq.filter (fun (_, e) -> e.Value("destination") = (ContractAddress.value s.Parameters.Contract))
+            |> Seq.filter (fun (_, e) -> check s.Parameters.Interests e)
+            |> Seq.map ((fun (h, e) -> toUpdate block.Level h e))
 
         if s.Parameters.Confirmations > 1 then
             ({ s with
                    PendingOperations = s.PendingOperations.Add(block.Level, t) },
              Seq.empty)
         else
-            (s,
-             t
-             |> Seq.map (fun u -> { Confirmations = 1; Value = u }))
+            (s, t)
 
 
     let run (subscription: Subscription) (poller: ISync) (level: Level) =
