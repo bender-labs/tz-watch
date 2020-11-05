@@ -164,7 +164,7 @@ let blockWithContractAndEntryPointAtLevel level contract entryPoint =
   { Level = level ; Operations = token}
 let blockWithContractAndEntryPoint = blockWithContractAndEntryPointAtLevel 0
 
-let blockWithContractTransfer contract =
+let blockWithContractTransfer level contract =
    let token = JToken.Parse (template
                               .Replace("#DESTINATION#", contract))
-   {Level = 0 ; Operations = token}
+   {Level = level ; Operations = token}

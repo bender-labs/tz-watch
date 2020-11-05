@@ -66,7 +66,7 @@ module ``Subscription test`` =
                    
         [<Fact>]
         let ``should ignore transfer`` () =
-            let block = blockWithContractTransfer "KT"
+            let block = blockWithContractTransfer 0 "KT"
             
             let(_, updates) = Subscription.applyBlock subscription block
             
@@ -105,7 +105,7 @@ module ``Subscription test`` =
             let block = blockWithContractAndEntryPointAtLevel 10 "KT" "mint"
             let (newSub, _) = Subscription.applyBlock subscription block
             
-            let (sub, updates) = Subscription.applyBlock newSub (blockWithContractTransfer "")
+            let (sub, updates) = Subscription.applyBlock newSub (blockWithContractTransfer 11 "")
             
             updates |> Seq.length |> should equal 1
             let expected = {
@@ -116,4 +116,5 @@ module ``Subscription test`` =
                          Parameters = block.Operations.SelectToken("$.[0].contents[0].parameters.value")} 
             }
             updates |> Seq.head |> should equal expected
-            sub.PendingOperations |> should be Empty
+            sub.PendingOperations.[11] |> should be Empty
+            sub.PendingOperations.ContainsKey 10 |> should be False

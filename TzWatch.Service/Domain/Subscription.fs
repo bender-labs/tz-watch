@@ -5,6 +5,7 @@ open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 open TzWatch.Service.Domain
 open FSharp.Control
+open FSharpx.Collections
 
 type Interest =
     | EntryPoint of string
@@ -71,16 +72,25 @@ module Subscription =
     let applyBlock (s: Subscription) (block: Block): (Subscription * Update seq) =
         let t =
             block.Operations
-            |> Seq.collect (fun o -> o.["contents"] |> Seq.map (fun e -> (o.["hash"].Value<string>(), e)))
+            |> Seq.collect (fun o ->
+                o.["contents"]
+                |> Seq.map (fun e -> (o.["hash"].Value<string>(), e)))
             |> Seq.filter (fun (_, e) -> e.Value("kind") = "transaction")
             |> Seq.filter (fun (_, e) -> e.Value("destination") = (ContractAddress.value s.Parameters.Contract))
             |> Seq.filter (fun (_, e) -> check s.Parameters.Interests e)
             |> Seq.map ((fun (h, e) -> toUpdate block.Level h e))
 
         if s.Parameters.Confirmations > 1 then
+            let levelToSend =
+                block.Level - s.Parameters.Confirmations + 1
+
+            let updates =
+                s.PendingOperations
+                |> Map.findOrDefault levelToSend Seq.empty
+
             ({ s with
-                   PendingOperations = s.PendingOperations.Add(block.Level, t) },
-             Seq.empty)
+                   PendingOperations = s.PendingOperations.Add(block.Level, t).Remove(levelToSend) },
+             updates)
         else
             (s, t)
 
