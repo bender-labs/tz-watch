@@ -6,6 +6,7 @@ nuget FSharp.Data 3.3.3
 nuget FSharpx.Extras 2.5.0
 nuget FsToolkit.ErrorHandling 1.4.3
 nuget FsUnit.xUnit 4.0.1
+nuget Giraffe 5.0.0-alpha-003 alpha
 nuget Microsoft.Extensions.Hosting.WindowsServices 3.1.9
 nuget Microsoft.NET.Test.Sdk 16.7.1
 nuget Netezos.rpc 1.1.2

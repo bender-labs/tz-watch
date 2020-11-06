@@ -14,10 +14,10 @@ module CommandHandler =
             let! address = ContractAddress.create command.Address
             let parameters = {
                 Contract = address
-                Interests = []
+                Interests = command.Interests
                 Confirmations = 0
             }
-            let sub = Subscription.create parameters (fun s -> async { log s })
+            let sub = Subscription.create parameters command.Channel
             return Subscription.run sub poller (Level.ToLevel command.Level)
         }
 
