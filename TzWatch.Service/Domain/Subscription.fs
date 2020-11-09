@@ -96,7 +96,7 @@ module Subscription =
             (s, t)
 
 
-    let run (subscription: Subscription) (poller: ISync) (level: Level) =
+    let run (poller: ISync) (level: Level) (subscription: Subscription)=
         let polling = poller.CatchupFrom level
 
         let handler (subscription: Subscription) (block: Block) =

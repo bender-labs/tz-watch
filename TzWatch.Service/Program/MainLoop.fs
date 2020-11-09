@@ -19,20 +19,17 @@ type Message =
     | Cancel of Guid
 
 module CommandHandler =
-    let subscribe (poller: ISync) (log: string -> unit) (command: CreateSubscription) =
+    let subscribe (poller: ISync)(command: CreateSubscription) =
         result {
             let! address = ContractAddress.create command.Address
-
             let parameters =
                 { Contract = address
                   Interests = command.Interests
                   Confirmations = 0 }
 
-            let sub =
-                Subscription.create parameters command.Channel
-
             let w =
-                Subscription.run sub poller (Level.ToLevel command.Level)
+                Subscription.create parameters command.Channel
+                |> Subscription.run poller (Level.ToLevel command.Level)
 
             let token = new CancellationTokenSource()
 
@@ -44,7 +41,7 @@ module CommandHandler =
 type MainLoop(poller: ISync, log: ILogger<MainLoop>) =
 
     let subscribe =
-        CommandHandler.subscribe poller log.LogInformation
+        CommandHandler.subscribe poller
 
     let agent =
         MailboxProcessor.Start(fun inbox ->
@@ -52,7 +49,7 @@ type MainLoop(poller: ISync, log: ILogger<MainLoop>) =
                 async {
                     let! msg = inbox.Receive()
                     log.LogInformation("Message {msg}", [msg])
-                    let r =
+                    let newState =
                         match msg with
                         | Subscribe (c, r) ->
                             match (subscribe c) with
@@ -68,7 +65,7 @@ type MainLoop(poller: ISync, log: ILogger<MainLoop>) =
                                 state.Remove(id)
                             else state
 
-                    return! messageLoop r
+                    return! messageLoop newState
                 }
 
             messageLoop Map.empty)

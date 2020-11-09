@@ -1,18 +1,20 @@
 ﻿open System.Text
 open System.Threading
 open System.Threading.Tasks
+open Microsoft.AspNetCore
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
 open Microsoft.AspNetCore.Http
-open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.DependencyInjection
+open Giraffe
+open Giraffe.EndpointRouting
 open Microsoft.Extensions.Logging
 open Netezos.Rpc
+open TzWatch.Service.Adapters.Json
 open TzWatch.Service.Program
 open TzWatch.Service.Sync
 open TzWatch.Service.Domain
 open TzWatch.Service.Adapters
-open Giraffe
 open FSharp.Control.Tasks.V2.ContextInsensitive
 
 
@@ -35,32 +37,25 @@ let channel (ctx: HttpContext) (update: Update) =
     |> Async.AwaitTask
 
 
-let subscribeHandler (mainLoop: MainLoop) (_: HttpFunc) (ctx: HttpContext) =
+let pocJson (payload: SubscribeDto) (next: HttpFunc) (ctx: HttpContext) =
     task {
         let channel = channel ctx
-
+        let mainLoop = ctx.GetService<MainLoop>()
         do! ctx.Response.Body.FlushAsync()
-
-        let! subscriptionId =
-            mainLoop.Subscribe
-                ({ Address = "KT1VzsDKqm3pmHH6S85LvWUBeBRs6kLswQKe"
-                   Level = Some 83510
-                   Channel = channel
-                   Confirmations = 3
-                   Interests =
-                       [ (EntryPoint "mint")
-                         (EntryPoint "burn") ] })
-
+        let! subscriptionId = mainLoop.Subscribe(toSubscribe payload channel)
         do! wait ctx.RequestAborted.WaitHandle
         mainLoop.CancelSubscription subscriptionId
         return Some ctx
     }
 
-let webApp (mainLoop: MainLoop) =
-    choose [ route "/test"
-             >=> setHttpHeader "Content-Type" "text/event-stream"
-             >=> subscribeHandler mainLoop
-             route "/ping" >=> text "pong" ]
+let endpoints =
+    [ GET => route "/ping" (text "pong")
+      POST
+      => route
+          "/subscriptions"
+             (setHttpHeader "Content-Type" "text/event-stream"
+              >=> (bindJson<SubscribeDto> pocJson)) ]
+
 
 let configureApp (app: IApplicationBuilder) =
     use rpc =
@@ -72,19 +67,21 @@ let configureApp (app: IApplicationBuilder) =
         app.ApplicationServices.GetService<ILogger<MainLoop>>()
 
     let mainLoop = MainLoop(sync, logger)
-
-    app.UseGiraffe(webApp mainLoop)
+    app.UseRouting().UseEndpoints(fun e -> e.MapGiraffeEndpoints endpoints)
+    |> ignore
 
 
 let configureServices (services: IServiceCollection) =
-    // Add Giraffe dependencies
-    services.AddGiraffe() |> ignore
+    services.AddSingleton<ISync, SyncNode>(fun c ->
+        use rpc =
+            new TezosRpc("https://delphinet-tezos.giganode.io")
+
+        SyncNode rpc).AddSingleton<MainLoop, MainLoop>().AddRouting().AddGiraffe()
+    |> ignore
 
 
 [<EntryPoint>]
-let main _ =
-    Host.CreateDefaultBuilder()
-        .ConfigureWebHostDefaults(fun webHostBuilder ->
-        webHostBuilder.Configure(configureApp).ConfigureServices(configureServices)
-        |> ignore).Build().Run()
+let main args =
+    WebHost.CreateDefaultBuilder(args).UseKestrel().Configure(configureApp).ConfigureServices(configureServices).Build()
+           .Run()
     0
