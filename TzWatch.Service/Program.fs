@@ -27,6 +27,7 @@ let channel (ctx: HttpContext) (update: Update) =
     task {
         let str =
             Json.updateToJson update |> Encoding.UTF8.GetBytes
+
         do! ctx.Response.Body.WriteAsync(str, 0, str.Length)
         do! ctx.Response.Body.FlushAsync()
         ()
@@ -39,17 +40,19 @@ let subscribeHandler (mainLoop: MainLoop) (_: HttpFunc) (ctx: HttpContext) =
         let channel = channel ctx
 
         do! ctx.Response.Body.FlushAsync()
-        mainLoop.Send
-            (Subscribe
+
+        let! subscriptionId =
+            mainLoop.Subscribe
                 ({ Address = "KT1VzsDKqm3pmHH6S85LvWUBeBRs6kLswQKe"
                    Level = Some 83510
                    Channel = channel
                    Confirmations = 3
                    Interests =
                        [ (EntryPoint "mint")
-                         (EntryPoint "burn") ] }))
+                         (EntryPoint "burn") ] })
+
         do! wait ctx.RequestAborted.WaitHandle
-        // todo cancel sub
+        mainLoop.CancelSubscription subscriptionId
         return Some ctx
     }
 

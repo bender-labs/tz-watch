@@ -8,7 +8,7 @@ module ``Subscription test`` =
 
     [<Fact>]
     let ``Should create with empty operations`` () =
-        let channel (_: string) = async { () }
+        let channel (_) = async { () }
         let addr = ContractAddress.createUnsafe "KTx"
 
         let parameters =
@@ -19,7 +19,6 @@ module ``Subscription test`` =
         let sub = Subscription.create parameters channel
 
         sub.Parameters |> should equal parameters
-        sub.Channel |> should be (sameAs channel)
         sub.PendingOperations |> should be (Empty)
 
     type ``Given a subscription interested in one entry point with 0 confirmation``() =
