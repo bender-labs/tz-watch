@@ -11,6 +11,7 @@ open Netezos.Rpc
 open TzWatch.Service.Program
 open TzWatch.Service.Sync
 open TzWatch.Service.Domain
+open TzWatch.Service.Adapters
 open Giraffe
 open FSharp.Control.Tasks.V2.ContextInsensitive
 
@@ -21,10 +22,12 @@ let wait handle =
     |> ignore
     tsc.Task
 
-let channel (ctx: HttpContext) (str: string) =
+
+let channel (ctx: HttpContext) (update: Update) =
     task {
-        let bytes = Encoding.UTF8.GetBytes str
-        do! ctx.Response.Body.WriteAsync(bytes, 0, bytes.Length)
+        let str =
+            Json.updateToJson update |> Encoding.UTF8.GetBytes
+        do! ctx.Response.Body.WriteAsync(str, 0, str.Length)
         do! ctx.Response.Body.FlushAsync()
         ()
     }
@@ -66,7 +69,7 @@ let configureApp (app: IApplicationBuilder) =
         app.ApplicationServices.GetService<ILogger<MainLoop>>()
 
     let mainLoop = MainLoop(sync, logger)
-    
+
     app.UseGiraffe(webApp mainLoop)
 
 
@@ -76,7 +79,7 @@ let configureServices (services: IServiceCollection) =
 
 
 [<EntryPoint>]
-let main argv =
+let main _ =
     Host.CreateDefaultBuilder()
         .ConfigureWebHostDefaults(fun webHostBuilder ->
         webHostBuilder.Configure(configureApp).ConfigureServices(configureServices)

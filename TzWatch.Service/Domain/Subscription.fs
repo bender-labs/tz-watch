@@ -1,7 +1,6 @@
 namespace TzWatch.Service.Domain
 
 open FSharpx.Control
-open Newtonsoft.Json
 open Newtonsoft.Json.Linq
 open TzWatch.Service.Domain
 open FSharp.Control
@@ -34,6 +33,8 @@ and UpdateValue =
     | EntryPointCall of EntryPointCall
     | BalanceUpdate of BalanceUpdate
     | StorageUpdate of StorageUpdate
+
+type Channel = Update -> Async<Unit>
 
 type Subscription =
     { Parameters: SubscriptionParameters
@@ -102,7 +103,7 @@ module Subscription =
             async {
                 let (newState, updates) = applyBlock subscription block
                 for e in updates do
-                    do! send subscription (JsonConvert.SerializeObject e)
+                    do! send subscription e
 
                 return newState
             }

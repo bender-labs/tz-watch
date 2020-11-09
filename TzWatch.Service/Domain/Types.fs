@@ -9,8 +9,6 @@ module Types =
     open FSharp.Control
     open Newtonsoft.Json.Linq
 
-    type Channel = string -> Async<Unit>
-
     type Block = { Level: int; Operations: JToken }
 
     type Level =
