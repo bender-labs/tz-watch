@@ -24,16 +24,9 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-      run: dotnet test --no-restore --test-adapter-path:. --logger:junit
-    - name: Publish Unit Test Results
-      uses: EnricoMi/publish-unit-test-result-action@v1.4
-      if: always()
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        check_name: Unit Test Results
-        comment_title: Unit Test Statistics
-        hide_comments: all but latest
-        comment_on_pr: true
-        files: ./TzWatch.Test/TestResults/**/*.xml
-        report_individual_runs: true
-        deduplicate_classes_by_file_name: false
+        uses: zyborg/dotnet-tests-report@v1.0.0
+        with:
+          project_path: TzWatch.Test
+          report_name: TzWatchTests
+          report_title: TzWatch Tests
+          github_token: ${{ secrets.GITHUB_TOKEN }}
