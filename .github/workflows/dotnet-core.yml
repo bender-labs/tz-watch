@@ -24,9 +24,10 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
-        uses: zyborg/dotnet-tests-report@v1.0.0
-        with:
-          project_path: TzWatch.Test
-          report_name: TzWatchTests
-          report_title: TzWatch Tests
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      uses: zyborg/dotnet-tests-report@v1.0.0
+      with:
+        no_restore: true
+        msbuild_verbosity: m
+        report_name: TzWatchTests
+        report_title: TzWatch Tests
+        github_token: ${{ secrets.GITHUB_TOKEN }}
