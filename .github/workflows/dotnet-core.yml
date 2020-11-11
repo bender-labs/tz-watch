@@ -19,8 +19,6 @@ jobs:
         dotnet-version: "5.0"
     - name: Restore tools
       run: dotnet tool restore
-    - name: Lint
-      run: dotnet fsharplint lint tz-watch.sln
     - name: Install dependencies
       run: dotnet restore
     - name: Build
