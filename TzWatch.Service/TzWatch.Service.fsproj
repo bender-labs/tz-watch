@@ -17,6 +17,8 @@
     <Compile Include="Sync\Poller.fs" />
     <Compile Include="Adapters\Json.fs" />
     <Compile Include="Program.fs" />
+    <Content Include="appsettings.Development.json" />
+    <Content Include="Properties\launchSettings.json" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

@@ -5,30 +5,31 @@ open Microsoft.AspNetCore
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Hosting
 open Microsoft.AspNetCore.Http
+open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Giraffe
 open Giraffe.EndpointRouting
-open Microsoft.Extensions.Logging
 open Netezos.Rpc
 open TzWatch.Service.Adapters.Json
 open TzWatch.Service.Program
 open TzWatch.Service.Sync
 open TzWatch.Service.Domain
-open TzWatch.Service.Adapters
 open FSharp.Control.Tasks.V2.ContextInsensitive
 
 
 let wait handle =
     let tsc = TaskCompletionSource<unit>()
+
     ThreadPool.RegisterWaitForSingleObject(handle, (fun _ _ -> tsc.SetResult()), null, -1, true)
     |> ignore
+
     tsc.Task
 
 
 let channel (ctx: HttpContext) (update: Update) =
     task {
         let str =
-            Json.updateToJson update |> Encoding.UTF8.GetBytes
+            updateToJson update |> Encoding.UTF8.GetBytes
 
         do! ctx.Response.Body.WriteAsync(str, 0, str.Length)
         do! ctx.Response.Body.FlushAsync()
@@ -37,7 +38,7 @@ let channel (ctx: HttpContext) (update: Update) =
     |> Async.AwaitTask
 
 
-let pocJson (payload: SubscribeDto) (next: HttpFunc) (ctx: HttpContext) =
+let pocJson (payload: SubscribeDto) (_: HttpFunc) (ctx: HttpContext) =
     task {
         let channel = channel ctx
         let mainLoop = ctx.GetService<MainLoop>()
@@ -58,30 +59,38 @@ let endpoints =
 
 
 let configureApp (app: IApplicationBuilder) =
-    use rpc =
-        new TezosRpc("https://delphinet-tezos.giganode.io")
-
-    let sync = SyncNode rpc
-
-    let logger =
-        app.ApplicationServices.GetService<ILogger<MainLoop>>()
-
-    let mainLoop = MainLoop(sync, logger)
-    app.UseRouting().UseEndpoints(fun e -> e.MapGiraffeEndpoints endpoints)
+    app
+        .UseRouting()
+        .UseEndpoints(fun e -> e.MapGiraffeEndpoints endpoints)
     |> ignore
 
 
-let configureServices (services: IServiceCollection) =
-    services.AddSingleton<ISync, SyncNode>(fun c ->
-        use rpc =
-            new TezosRpc("https://delphinet-tezos.giganode.io")
+type IServiceCollection with
+    member this.AddTzWatch(configuration: IConfiguration) =
+        let host = configuration.["TezosNode:Endpoint"]
 
-        SyncNode rpc).AddSingleton<MainLoop, MainLoop>().AddRouting().AddGiraffe()
+        this
+            .AddSingleton<TezosRpc>(fun c -> new TezosRpc(host))
+            .AddSingleton<ISync, SyncNode>()
+            .AddSingleton<MainLoop, MainLoop>()
+
+
+let configureServices (hostContext: WebHostBuilderContext) (services: IServiceCollection) =
+    services
+        .AddTzWatch(hostContext.Configuration)
+        .AddRouting()
+        .AddGiraffe()
     |> ignore
 
 
 [<EntryPoint>]
 let main args =
-    WebHost.CreateDefaultBuilder(args).UseKestrel().Configure(configureApp).ConfigureServices(configureServices).Build()
-           .Run()
+    WebHost
+        .CreateDefaultBuilder(args)
+        .UseKestrel()
+        .Configure(configureApp)
+        .ConfigureServices(configureServices)
+        .Build()
+        .Run()
+
     0
