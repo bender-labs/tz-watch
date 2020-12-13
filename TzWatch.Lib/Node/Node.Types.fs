@@ -1,4 +1,4 @@
-namespace TzWatch.Service.Node
+namespace TzWatch.Node
 
 module Types =
     open FSharp.Data

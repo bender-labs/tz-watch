@@ -1,4 +1,4 @@
-namespace TzWatch.Service.Domain
+namespace TzWatch.Domain
 
 open System
 

@@ -3,7 +3,7 @@
 module ``Subscription test`` =
     open Xunit
     open FsUnit.Xunit
-    open TzWatch.Service.Domain
+    open TzWatch.Domain
 
 
     [<Fact>]

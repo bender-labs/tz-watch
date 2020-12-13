@@ -3,9 +3,6 @@ module TzWatch.Test.Data
 
 open Newtonsoft.Json.Linq
 
-
-
-
 let private template = """[ { "protocol": "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
     "chain_id": "NetXm8tYqnMWky1",
     "hash": "oom3y9QdYJmdUXzwAyYHV4K7ecbtJGqpv6yiSWxD85FB8aBXn8j",
@@ -155,7 +152,7 @@ let private transferTemplate = """[ { "protocol": "PsDELPH1Kxsxt8f9eWbxQeRxkjfbx
       "sigVhrq834QeG9z4X35zZieJ9wn2n5mrirAdQHWuyy2PKwTfCk9Dza9GnX1PxQNtUB12jmSY2oKT99grDXtVFozyuhbwsRV5" } ]
 """
 
-open TzWatch.Service.Domain
+open TzWatch.Domain
 
 let blockWithContractAndEntryPointAtLevel level contract entryPoint =
   let token = JToken.Parse (template

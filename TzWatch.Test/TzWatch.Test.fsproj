@@ -3,12 +3,12 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TzWatch.Service\TzWatch.Service.fsproj" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="paket.references" />
     <Compile Include="Data.fs" />
     <Compile Include="Subscription.Test.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TzWatch.Lib\TzWatch.Lib.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>

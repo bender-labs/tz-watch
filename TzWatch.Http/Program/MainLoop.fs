@@ -1,10 +1,10 @@
-namespace TzWatch.Service.Program
+namespace TzWatch.Http.Program
 
 open System
 open System.Threading
 open FSharp.Control
 open Microsoft.Extensions.Logging
-open TzWatch.Service.Domain
+open TzWatch.Domain
 open FsToolkit.ErrorHandling
 
 type CreateSubscription =

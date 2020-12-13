@@ -10,12 +10,11 @@ open Microsoft.Extensions.DependencyInjection
 open Giraffe
 open Giraffe.EndpointRouting
 open Netezos.Rpc
-open TzWatch.Service.Adapters.Json
-open TzWatch.Service.Program
-open TzWatch.Service.Sync
-open TzWatch.Service.Domain
+open TzWatch.Http.Adapters.Json
+open TzWatch.Http.Program
+open TzWatch.Sync
+open TzWatch.Domain
 open FSharp.Control.Tasks.V2.ContextInsensitive
-
 
 let wait handle =
     let tsc = TaskCompletionSource<unit>()

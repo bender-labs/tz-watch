@@ -1,11 +1,10 @@
-namespace TzWatch.Service.Adapters
+namespace TzWatch.Http.Adapters
 
 open System
-open System.Xml.Schema
 open Newtonsoft.Json
 open Newtonsoft.Json.Serialization
-open TzWatch.Service.Domain
-open TzWatch.Service.Program
+open TzWatch.Domain
+open TzWatch.Http.Program
 
 module Json =
 

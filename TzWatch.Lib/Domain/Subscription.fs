@@ -1,8 +1,7 @@
-namespace TzWatch.Service.Domain
+namespace TzWatch.Domain
 
 open FSharpx.Control
 open Newtonsoft.Json.Linq
-open TzWatch.Service.Domain
 open FSharp.Control
 open FSharpx.Collections
 

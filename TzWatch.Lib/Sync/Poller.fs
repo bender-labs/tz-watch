@@ -1,4 +1,4 @@
-module TzWatch.Service.Sync
+module TzWatch.Sync
 
 open System
 open System.Reactive.Linq
@@ -7,8 +7,8 @@ open FSharp.Control.Reactive
 
 open FSharpx.Control
 open Netezos.Rpc
-open TzWatch.Service.Domain
-open TzWatch.Service.Node.Types
+open TzWatch.Domain
+open TzWatch.Node.Types
 
 type SyncNode(node: TezosRpc) =
 
@@ -98,7 +98,6 @@ type SyncNode(node: TezosRpc) =
                         |> Async.AwaitTask
 
                     let header = Header.Parse(head.ToString())
-
                     let! value =
                         node.Blocks.[current].Operations.[3].GetAsync()
                         |> Async.AwaitTask
@@ -118,7 +117,6 @@ type SyncNode(node: TezosRpc) =
                         |> Async.AwaitTask
 
                     let header = Header.Parse(head.ToString())
-                    
                     let actualLevel =
                         match current with
                         | Height i -> i

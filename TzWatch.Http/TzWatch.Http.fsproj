@@ -5,20 +5,14 @@
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="Node\data" />
-    <Compile Include="Node\Node.Types.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Domain\Types.fs" />
-    <Compile Include="Domain\Subscription.fs" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Program\MainLoop.fs" />
-    <Compile Include="Sync\Poller.fs" />
     <Compile Include="Adapters\Json.fs" />
     <Compile Include="Program.fs" />
     <Content Include="appsettings.Development.json" />
     <Content Include="Properties\launchSettings.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TzWatch.Lib\TzWatch.Lib.fsproj" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
