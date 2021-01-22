@@ -67,10 +67,11 @@ let configureApp (app: IApplicationBuilder) =
 type IServiceCollection with
     member this.AddTzWatch(configuration: IConfiguration) =
         let host = configuration.["TezosNode:Endpoint"]
-        printfn "%s" host
+        let chainId = configuration.["TezosNode:ChainId"]
+        let client = new TezosRpc(host)
+
         this
-            .AddSingleton<TezosRpc>(fun c -> new TezosRpc(host))
-            .AddSingleton<ISync, SyncNode>()
+            .AddSingleton<ISync>(SyncNode(client, chainId))
             .AddSingleton<MainLoop, MainLoop>()
 
 

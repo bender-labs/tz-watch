@@ -7,7 +7,8 @@ open Netezos.Rpc
 open TzWatch.Domain
 open TzWatch.Node.Types
 
-type SyncNode(node: TezosRpc) =
+
+type SyncNode(node: TezosRpc, chainId: string) =
 
     interface ISync with
 
@@ -20,6 +21,7 @@ type SyncNode(node: TezosRpc) =
 
 
                     let header = Header.Parse(head.ToString())
+                    if header.ChainId <> chainId then failwith "Invalid Chain"
                     let headLevel = header.Level
 
                     let actualLevel =
