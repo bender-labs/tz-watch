@@ -20,9 +20,7 @@ module Types =
             | None -> Head
 
     type ISync =
-        abstract Head: IConnectableObservable<JToken>
-        abstract From: int -> AsyncSeq<JToken>
-        abstract CatchupFrom: Level -> AsyncSeq<Block>
+        abstract CatchupFrom: Level -> uint -> AsyncSeq<Block>
 
     type ContractAddress = private ContractAddress of string
 

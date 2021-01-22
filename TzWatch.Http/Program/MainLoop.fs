@@ -3,9 +3,11 @@ namespace TzWatch.Http.Program
 open System
 open System.Threading
 open FSharp.Control
+open FSharp.Data.Runtime.HtmlInference
 open Microsoft.Extensions.Logging
 open TzWatch.Domain
 open FsToolkit.ErrorHandling
+
 
 type CreateSubscription =
     { Address: string
@@ -14,22 +16,25 @@ type CreateSubscription =
       Channel: Channel
       Interests: Interest list }
 
+and Channel = Update -> Async<Unit>
+
 type Message =
     | Subscribe of CreateSubscription * replyChannel: AsyncReplyChannel<Guid>
     | Cancel of Guid
 
 module CommandHandler =
-    let subscribe (poller: ISync)(command: CreateSubscription) =
+    let subscribe (poller: ISync) (command: CreateSubscription) =
         result {
             let! address = ContractAddress.create command.Address
+
             let parameters =
                 { Contract = address
                   Interests = command.Interests
-                  Confirmations = 0 }
+                  Confirmations = 0u }
 
             let w =
-                Subscription.create parameters command.Channel
-                |> Subscription.run poller (Level.ToLevel command.Level)
+                Subscription.run poller (Level.ToLevel command.Level) parameters
+                |> AsyncSeq.iterAsync command.Channel
 
             let token = new CancellationTokenSource()
 
@@ -40,15 +45,15 @@ module CommandHandler =
 
 type MainLoop(poller: ISync, log: ILogger<MainLoop>) =
 
-    let subscribe =
-        CommandHandler.subscribe poller
+    let subscribe = CommandHandler.subscribe poller
 
     let agent =
         MailboxProcessor.Start(fun inbox ->
             let rec messageLoop (state: Map<Guid, CancellationTokenSource>) =
                 async {
                     let! msg = inbox.Receive()
-                    log.LogInformation("Message {msg}", [msg])
+                    log.LogInformation("Message {msg}", [ msg ])
+
                     let newState =
                         match msg with
                         | Subscribe (c, r) ->
@@ -57,13 +62,14 @@ type MainLoop(poller: ISync, log: ILogger<MainLoop>) =
                                 r.Reply id
                                 state.Add(id, token)
                             | Error e ->
-                                log.LogError("Error {e}", [e])
+                                log.LogError("Error {e}", [ e ])
                                 state
                         | Cancel id ->
                             if state.ContainsKey(id) then
                                 state.[id].Cancel()
                                 state.Remove(id)
-                            else state
+                            else
+                                state
 
                     return! messageLoop newState
                 }

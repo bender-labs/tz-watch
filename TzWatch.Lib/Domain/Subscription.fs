@@ -1,6 +1,5 @@
 namespace TzWatch.Domain
 
-open FSharpx.Control
 open Newtonsoft.Json.Linq
 open FSharp.Control
 open FSharpx.Collections
@@ -13,7 +12,7 @@ type Interest =
 type SubscriptionParameters =
     { Contract: ContractAddress
       Interests: Interest list
-      Confirmations: int }
+      Confirmations: uint }
 
 type Update =
     { Level: int
@@ -33,22 +32,7 @@ and UpdateValue =
     | BalanceUpdate of BalanceUpdate
     | StorageUpdate of StorageUpdate
 
-type Channel = Update -> Async<Unit>
-
-type Subscription =
-    { Parameters: SubscriptionParameters
-      Channel: Channel
-      PendingOperations: Map<int, Update seq> }
-
-
 module Subscription =
-    let create parameters channel =
-        { Parameters = parameters
-          Channel = channel
-          PendingOperations = Map.empty }
-
-    let send { Channel = channel } value = channel value
-
     let private check (interests: Interest list) (operation: JToken) =
         interests
         |> List.fold (fun acc i ->
@@ -56,7 +40,8 @@ module Subscription =
             || match i with
                | EntryPoint v ->
                    not (isNull operation.["parameters"])
-                   && operation.["parameters"].["entrypoint"].Value<string>() = v
+                   && operation.["parameters"].["entrypoint"]
+                       .Value<string>() = v
                | _ -> false
 
             ) false
@@ -66,47 +51,30 @@ module Subscription =
           Hash = hash
           Value =
               EntryPointCall
-                  { Entrypoint = operation.SelectToken("parameters.entrypoint").Value<string>()
+                  { Entrypoint =
+                        operation
+                            .SelectToken("parameters.entrypoint")
+                            .Value<string>()
                     Parameters = operation.SelectToken("parameters.value") } }
 
-    let applyBlock (s: Subscription) (block: Block): (Subscription * Update seq) =
+    let applyBlock (s: SubscriptionParameters) (block: Block): (SubscriptionParameters * Update seq) =
         let t =
             block.Operations
             |> Seq.collect (fun o ->
                 o.["contents"]
                 |> Seq.map (fun e -> (o.["hash"].Value<string>(), e)))
             |> Seq.filter (fun (_, e) -> e.Value("kind") = "transaction")
-            |> Seq.filter (fun (_, e) -> e.Value("destination") = (ContractAddress.value s.Parameters.Contract))
-            |> Seq.filter (fun (_, e) -> check s.Parameters.Interests e)
+            |> Seq.filter (fun (_, e) -> e.Value("destination") = (ContractAddress.value s.Contract))
+            |> Seq.filter (fun (_, e) -> check s.Interests e)
             |> Seq.map ((fun (h, e) -> toUpdate block.Level h e))
-
-        if s.Parameters.Confirmations > 1 then
-            let levelToSend =
-                block.Level - s.Parameters.Confirmations + 1
-
-            let updates =
-                s.PendingOperations
-                |> Map.findOrDefault levelToSend Seq.empty
-
-            ({ s with
-                   PendingOperations = s.PendingOperations.Add(block.Level, t).Remove(levelToSend) },
-             updates)
-        else
-            (s, t)
+        (s, t)
 
 
-    let run (poller: ISync) (level: Level) (subscription: Subscription)=
-        let polling = poller.CatchupFrom level
+    let run (poller: ISync) (level: Level) (subscription: SubscriptionParameters) =
+        let polling =
+            poller.CatchupFrom level subscription.Confirmations
 
-        let handler (subscription: Subscription) (block: Block) =
-            async {
-                let (newState, updates) = applyBlock subscription block
-                for e in updates do
-                    do! send subscription e
-
-                return newState
-            }
-
+        let handler = applyBlock subscription >> (fun (_,u)->AsyncSeq.ofSeq u)
+        
         polling
-        |> AsyncSeq.foldAsync handler subscription
-        |> Async.map ignore
+        |> AsyncSeq.collect handler
