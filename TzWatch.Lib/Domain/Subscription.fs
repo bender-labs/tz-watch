@@ -67,6 +67,7 @@ module Subscription =
             |> Seq.filter (fun (_, e) -> e.Value("destination") = (ContractAddress.value s.Contract))
             |> Seq.filter (fun (_, e) -> check s.Interests e)
             |> Seq.map ((fun (h, e) -> toUpdate block.Level h e))
+
         (s, t)
 
 
@@ -74,7 +75,8 @@ module Subscription =
         let polling =
             poller.CatchupFrom level subscription.Confirmations
 
-        let handler = applyBlock subscription >> (fun (_,u)->AsyncSeq.ofSeq u)
-        
-        polling
-        |> AsyncSeq.collect handler
+        let handler =
+            applyBlock subscription
+            >> (fun (_, u) -> AsyncSeq.ofSeq u)
+
+        polling |> AsyncSeq.collect handler

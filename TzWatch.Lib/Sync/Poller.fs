@@ -30,7 +30,7 @@ type SyncNode(node: TezosRpc, chainId: string) =
                         | Head -> headLevel
 
                     if actualLevel + int confirmations > headLevel then
-                        do! Async.Sleep(TimeSpan.FromSeconds(30.0).Milliseconds)
+                        do! Async.Sleep(TimeSpan.FromSeconds(30.0))
                         yield! loop (Height actualLevel)
                     else
                         let! value =
