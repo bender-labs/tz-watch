@@ -14,9 +14,11 @@ module Json =
 
 
     type UpdateDto =
-        { Hash: string
+        { OperationId: OperationId
+          Nonce: int Nullable
           Type: string
           Payload: Map<String, Object> }
+
 
     type BlockDto =
         { Level: int
@@ -34,8 +36,19 @@ module Json =
 
     and InterestDto = { Type: string; Value: string }
 
+    let private opId =
+        function
+        | Operation v -> v
+        | InternalOperation (v, _) -> v
+
+    let nonce =
+        function
+        | InternalOperation (_, i) -> Nullable i
+        | _ -> Nullable()
+
     let private payload (update: Update) payloadType payload =
-        { Hash = update.OperationHash
+        { OperationId = opId update.UpdateId
+          Nonce = nonce update.UpdateId
           Type = payloadType
           Payload = payload }
 

@@ -148,7 +148,9 @@ let private transferTemplate = """[ { "protocol": "PsDELPH1Kxsxt8f9eWbxQeRxkjfbx
           "counter": "654654", "gas_limit": "58490", "storage_limit": "166",
           "amount": "0",
           "destination": "#DESTINATION#",
-          "metadata":{}
+          "metadata":{
+            "operation_result":{"status":"applied"}
+          }
           }],
     "signature":
       "sigVhrq834QeG9z4X35zZieJ9wn2n5mrirAdQHWuyy2PKwTfCk9Dza9GnX1PxQNtUB12jmSY2oKT99grDXtVFozyuhbwsRV5" } ]
@@ -170,6 +172,20 @@ let blockWithContractAndEntryPointAtLevel level contract entryPoint =
       Operations = token }
 
 let blockWithContractAndEntryPoint = blockWithContractAndEntryPointAtLevel 0
+
+let blockWithRejectedOperations contract entryPoint =
+  let token =
+        JToken.Parse
+            (template
+                .Replace("#DESTINATION#", contract)
+                .Replace("#ENTRYPOINT#", entryPoint)
+                .Replace("applied", "error"))
+
+  { Level = 0
+    Hash = "BlockHash"
+    Timestamp = DateTimeOffset.Now
+    ChainId = "chainId"
+    Operations = token }  
 
 let blockWithInternalCall contract entryPoint =
     let token =

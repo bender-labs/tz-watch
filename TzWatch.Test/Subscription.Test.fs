@@ -50,13 +50,16 @@ module ``Subscription test`` =
             updates.Updates |> Seq.length |> should equal 1
             let update = updates.Updates |> Seq.head
 
-            update.OperationHash
-            |> should
-                equal
-                   (block
-                       .Operations
-                       .SelectToken("$.[0].hash")
-                       .ToString())
+            let expectedId =
+                Operation
+                    { OpgHash =
+                          block
+                              .Operations
+                              .SelectToken("$.[0].hash")
+                              .ToString()
+                      Index = 0 }
+
+            update.UpdateId |> should equal expectedId
 
             update.Value
             |> should
@@ -77,13 +80,17 @@ module ``Subscription test`` =
             updates.Updates |> Seq.length |> should equal 1
             let update = updates.Updates |> Seq.head
 
-            update.OperationHash
-            |> should
-                equal
-                   (block
-                       .Operations
-                       .SelectToken("$.[0].hash")
-                       .ToString())
+            let expectedId =
+                InternalOperation
+                    ({ OpgHash =
+                           block
+                               .Operations
+                               .SelectToken("$.[0].hash")
+                               .ToString()
+                       Index = 0 },
+                     0)
+
+            update.UpdateId |> should equal expectedId
 
             update.Value
             |> should
@@ -97,6 +104,15 @@ module ``Subscription test`` =
         [<Fact>]
         let ``should ignore transfer`` () =
             let block = blockWithContractTransfer 0 "KT"
+
+            let log =
+                Subscription.applyBlock subscription block
+
+            log |> hasValue |> should equal false
+
+        [<Fact>]
+        let ``should ignore failed operations`` () =
+            let block = blockWithRejectedOperations "KT" "mint"
 
             let log =
                 Subscription.applyBlock subscription block

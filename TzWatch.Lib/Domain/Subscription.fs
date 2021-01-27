@@ -21,8 +21,14 @@ type BlockHeader =
       Timestamp: DateTimeOffset
       ChainId: string }
 
+type OperationId = { OpgHash: string; Index: int }
+
+type UpdateId =
+    | Operation of OperationId
+    | InternalOperation of OperationId * int
+
 type Update =
-    { OperationHash: string
+    { UpdateId: UpdateId
       Value: UpdateValue }
 
 and EntryPointCall =
@@ -56,8 +62,8 @@ module Subscription =
 
             ) false
 
-    let private toUpdate hash (operation: JToken) =
-        { OperationHash = hash
+    let private toUpdate (id, (operation: JToken)) =
+        { UpdateId = id
           Value =
               EntryPointCall
                   { Entrypoint =
@@ -66,24 +72,54 @@ module Subscription =
                             .Value<string>()
                     Parameters = operation.SelectToken("parameters.value") } }
 
+    let private applyOperation (s: SubscriptionParameters) (op: JToken) =
+        let isOperationValid (e: JToken) =
+            e
+                .SelectToken("metadata.operation_result.status")
+                .Value<string>() = "applied"
+            && e.Value("kind") = "transaction"
+
+        let isInternalOpValid (e: JToken) =
+            e.SelectToken("result.status").Value<string>() = "applied"
+            && e.Value("kind") = "transaction"
+
+        let hash: string = op.Value("hash")
+
+        let operations =
+            op.["contents"]
+            |> Seq.mapi (fun i e -> ({ OpgHash = hash; Index = i }, e))
+            |> Seq.filter (fun (_, e) -> isOperationValid e)
+
+        let internalOperations =
+            operations
+            |> Seq.collect (fun (index, e) ->
+                let internals =
+                    e.["metadata"].["internal_operation_results"]
+
+                let r =
+                    if not (isNull internals) then internals else JArray() :> JToken
+
+                r
+                |> Seq.mapi (fun i e -> (InternalOperation(index, i), e)))
+            |> Seq.filter (fun (_, e) -> isInternalOpValid e)
+
+        let operations =
+            operations
+            |> Seq.map (fun (i, e) -> (Operation i, e))
+
+        let r =
+            Seq.append operations internalOperations
+            |> Seq.filter (fun (_, e) -> e.Value("destination") = (ContractAddress.value s.Contract))
+            |> Seq.filter (fun (_, e) -> check s.Interests e)
+            |> Seq.map toUpdate
+
+        r
+
     let applyBlock (s: SubscriptionParameters) (block: Block): (SubscriptionParameters * EventLog) option =
         let updates =
             block.Operations
-            |> Seq.collect (fun o ->
-                o.["contents"]
-                |> Seq.map (fun e -> (o.["hash"].Value<string>(), e))
-                |> Seq.append
-                    (o.["contents"]
-                     |> Seq.collect (fun c ->
-                         let internals =
-                             c.["metadata"].["internal_operation_results"]
-
-                         if not (isNull internals) then internals else JArray() :> JToken)
-                     |> Seq.map (fun i -> (o.["hash"].Value<string>(), i))))
-            |> Seq.filter (fun (_, e) -> e.Value("kind") = "transaction")
-            |> Seq.filter (fun (_, e) -> e.Value("destination") = (ContractAddress.value s.Contract))
-            |> Seq.filter (fun (_, e) -> check s.Interests e)
-            |> Seq.map ((fun (h, e) -> toUpdate h e))
+            |> Seq.map (applyOperation s)
+            |> Seq.concat
 
         if updates |> Seq.length > 0 then
             let t =
