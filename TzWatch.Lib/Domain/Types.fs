@@ -9,7 +9,13 @@ module Types =
     open FSharp.Control
     open Newtonsoft.Json.Linq
 
-    type Block = { Level: int; Operations: JToken }
+    type Block = {
+        Level: int
+        Hash: string
+        Timestamp: DateTimeOffset
+        ChainId: string
+        Operations: JToken
+    }
 
     type Level =
         | Head

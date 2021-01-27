@@ -3,7 +3,6 @@ namespace TzWatch.Http.Program
 open System
 open System.Threading
 open FSharp.Control
-open FSharp.Data.Runtime.HtmlInference
 open Microsoft.Extensions.Logging
 open TzWatch.Domain
 open FsToolkit.ErrorHandling
@@ -16,7 +15,7 @@ type CreateSubscription =
       Channel: Channel
       Interests: Interest list }
 
-and Channel = Update -> Async<Unit>
+and Channel = EventLog -> Async<Unit>
 
 type Message =
     | Subscribe of CreateSubscription * replyChannel: AsyncReplyChannel<Guid>

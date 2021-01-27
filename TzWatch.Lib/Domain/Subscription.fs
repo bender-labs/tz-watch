@@ -1,5 +1,6 @@
 namespace TzWatch.Domain
 
+open System
 open Newtonsoft.Json.Linq
 open FSharp.Control
 open FSharpx.Collections
@@ -14,9 +15,14 @@ type SubscriptionParameters =
       Interests: Interest list
       Confirmations: uint }
 
-type Update =
-    { Level: int
+type BlockHeader =
+    { Level: bigint
       Hash: string
+      Timestamp: DateTimeOffset
+      ChainId: string }
+
+type Update =
+    { OperationHash: string
       Value: UpdateValue }
 
 and EntryPointCall =
@@ -32,6 +38,10 @@ and UpdateValue =
     | BalanceUpdate of BalanceUpdate
     | StorageUpdate of StorageUpdate
 
+type EventLog =
+    { BlockHeader: BlockHeader
+      Updates: Update seq }
+
 module Subscription =
     let private check (interests: Interest list) (operation: JToken) =
         interests
@@ -46,9 +56,8 @@ module Subscription =
 
             ) false
 
-    let private toUpdate level hash (operation: JToken) =
-        { Level = level
-          Hash = hash
+    let private toUpdate hash (operation: JToken) =
+        { OperationHash = hash
           Value =
               EntryPointCall
                   { Entrypoint =
@@ -57,26 +66,46 @@ module Subscription =
                             .Value<string>()
                     Parameters = operation.SelectToken("parameters.value") } }
 
-    let applyBlock (s: SubscriptionParameters) (block: Block): (SubscriptionParameters * Update seq) =
-        let t =
+    let applyBlock (s: SubscriptionParameters) (block: Block): (SubscriptionParameters * EventLog) option =
+        let updates =
             block.Operations
             |> Seq.collect (fun o ->
                 o.["contents"]
-                |> Seq.map (fun e -> (o.["hash"].Value<string>(), e)))
+                |> Seq.map (fun e -> (o.["hash"].Value<string>(), e))
+                |> Seq.append
+                    (o.["contents"]
+                     |> Seq.collect (fun c ->
+                         let internals =
+                             c.["metadata"].["internal_operation_results"]
+
+                         if not (isNull internals) then internals else JArray() :> JToken)
+                     |> Seq.map (fun i -> (o.["hash"].Value<string>(), i))))
             |> Seq.filter (fun (_, e) -> e.Value("kind") = "transaction")
             |> Seq.filter (fun (_, e) -> e.Value("destination") = (ContractAddress.value s.Contract))
             |> Seq.filter (fun (_, e) -> check s.Interests e)
-            |> Seq.map ((fun (h, e) -> toUpdate block.Level h e))
+            |> Seq.map ((fun (h, e) -> toUpdate h e))
 
-        (s, t)
+        if updates |> Seq.length > 0 then
+            let t =
+                { BlockHeader =
+                      { Level = bigint block.Level
+                        Hash = block.Hash
+                        Timestamp = block.Timestamp
+                        ChainId = block.ChainId }
+                  Updates = updates }
+
+            Some(s, t)
+        else
+            None
 
 
     let run (poller: ISync) (level: Level) (subscription: SubscriptionParameters) =
         let polling =
             poller.CatchupFrom level subscription.Confirmations
 
-        let handler =
-            applyBlock subscription
-            >> (fun (_, u) -> AsyncSeq.ofSeq u)
+        let handler = applyBlock subscription
 
-        polling |> AsyncSeq.collect handler
+        polling
+        |> AsyncSeq.map handler
+        |> AsyncSeq.choose id
+        |> AsyncSeq.map snd

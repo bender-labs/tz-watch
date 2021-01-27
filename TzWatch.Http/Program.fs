@@ -25,7 +25,7 @@ let wait handle =
     tsc.Task
 
 
-let channel (ctx: HttpContext) (update: Update) =
+let channel (ctx: HttpContext) (update: EventLog) =
     task {
         let str =
             updateToJson update |> Encoding.UTF8.GetBytes

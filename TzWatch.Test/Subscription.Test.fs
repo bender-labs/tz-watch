@@ -6,6 +6,16 @@ module ``Subscription test`` =
     open FsUnit.Xunit
     open TzWatch.Domain
 
+    let hasValue =
+        function
+        | Some _ -> true
+        | None -> false
+
+    let value =
+        function
+        | Some v -> v
+        | None -> failwith "Option is empty"
+
     type ``Given a subscription interested in one entry point with 0 confirmation``() =
 
         let subscription =
@@ -16,17 +26,17 @@ module ``Subscription test`` =
 
         [<Fact>]
         let ``should not give update on other contract`` () =
-            let (_, updates) =
+            let log =
                 Subscription.applyBlock subscription (blockWithContractAndEntryPoint "Other" "mint")
 
-            updates |> Seq.length |> should equal 0
+            log |> hasValue |> should equal false
 
         [<Fact>]
         let ``should not give update on other entrypoint`` () =
-            let (_, updates) =
+            let log =
                 Subscription.applyBlock subscription (blockWithContractAndEntryPoint "KT" "burn")
 
-            updates |> Seq.length |> should equal 0
+            log |> hasValue |> should equal false
 
         [<Fact>]
         let ``should give update when entrypoint and contract match`` () =
@@ -35,11 +45,12 @@ module ``Subscription test`` =
 
             let (_, updates) =
                 Subscription.applyBlock subscription block
+                |> value
 
-            updates |> Seq.length |> should equal 1
-            let update = updates |> Seq.head
+            updates.Updates |> Seq.length |> should equal 1
+            let update = updates.Updates |> Seq.head
 
-            update.Hash
+            update.OperationHash
             |> should
                 equal
                    (block
@@ -54,11 +65,40 @@ module ``Subscription test`` =
                        { Entrypoint = "mint"
                          Parameters = block.Operations.SelectToken("$.[0].contents[0].parameters.value") })
 
+
+        [<Fact>]
+        let ``Should give update for internal operations`` () =
+            let block = blockWithInternalCall "KT" "mint"
+
+            let (_, updates) =
+                Subscription.applyBlock subscription block
+                |> value
+
+            updates.Updates |> Seq.length |> should equal 1
+            let update = updates.Updates |> Seq.head
+
+            update.OperationHash
+            |> should
+                equal
+                   (block
+                       .Operations
+                       .SelectToken("$.[0].hash")
+                       .ToString())
+
+            update.Value
+            |> should
+                equal
+                   (EntryPointCall
+                       { Entrypoint = "mint"
+                         Parameters =
+                             block.Operations.SelectToken
+                                 ("$.[0].contents[0].metadata.internal_operation_results[0].parameters.value") })
+
         [<Fact>]
         let ``should ignore transfer`` () =
             let block = blockWithContractTransfer 0 "KT"
 
-            let (_, updates) =
+            let log =
                 Subscription.applyBlock subscription block
 
-            updates |> Seq.length |> should equal 0
+            log |> hasValue |> should equal false

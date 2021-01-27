@@ -1,6 +1,7 @@
 [<AutoOpen>]
 module TzWatch.Test.Data
 
+open System
 open Newtonsoft.Json.Linq
 
 let private template = """[ { "protocol": "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs5Y5fBxWWh4ifpo",
@@ -72,9 +73,9 @@ let private template = """[ { "protocol": "PsDELPH1Kxsxt8f9eWbxQeRxkjfbxoqM52jvs
                 [ { "kind": "transaction",
                     "source": "KT1EwUrkbmGxjiRvmEAa8HLGhjJeRocqVTFi",
                     "nonce": 0, "amount": "0",
-                    "destination": "KT1Lwe8cqgriABNvafPJGG4MJdvn1yYqLxHq",
+                    "destination": "#INTERNAL_CALL#",
                     "parameters":
-                      { "entrypoint": "tokens",
+                      { "entrypoint": "#INTERNAL_EP#",
                         "value":
                           { "prim": "Right",
                             "args":
@@ -147,7 +148,8 @@ let private transferTemplate = """[ { "protocol": "PsDELPH1Kxsxt8f9eWbxQeRxkjfbx
           "counter": "654654", "gas_limit": "58490", "storage_limit": "166",
           "amount": "0",
           "destination": "#DESTINATION#",
-          }]
+          "metadata":{}
+          }],
     "signature":
       "sigVhrq834QeG9z4X35zZieJ9wn2n5mrirAdQHWuyy2PKwTfCk9Dza9GnX1PxQNtUB12jmSY2oKT99grDXtVFozyuhbwsRV5" } ]
 """
@@ -155,13 +157,40 @@ let private transferTemplate = """[ { "protocol": "PsDELPH1Kxsxt8f9eWbxQeRxkjfbx
 open TzWatch.Domain
 
 let blockWithContractAndEntryPointAtLevel level contract entryPoint =
-  let token = JToken.Parse (template
-                              .Replace("#DESTINATION#", contract)
-                              .Replace("#ENTRYPOINT#", entryPoint))
-  { Level = level ; Operations = token}
+    let token =
+        JToken.Parse
+            (template
+                .Replace("#DESTINATION#", contract)
+                .Replace("#ENTRYPOINT#", entryPoint))
+
+    { Level = level
+      Hash = "BlockHash"
+      Timestamp = DateTimeOffset.Now
+      ChainId = "chainId"
+      Operations = token }
+
 let blockWithContractAndEntryPoint = blockWithContractAndEntryPointAtLevel 0
 
+let blockWithInternalCall contract entryPoint =
+    let token =
+        JToken.Parse
+            (template
+                .Replace("#INTERNAL_CALL#", contract)
+                .Replace("#INTERNAL_EP#", entryPoint))
+
+    { Level = 0
+      Hash = "BlockHash"
+      Timestamp = DateTimeOffset.Now
+      ChainId = "chainId"
+      Operations = token }
+
+
 let blockWithContractTransfer level contract =
-   let token = JToken.Parse (template
-                              .Replace("#DESTINATION#", contract))
-   {Level = level ; Operations = token}
+    let token =
+        JToken.Parse(transferTemplate.Replace("#DESTINATION#", contract))
+
+    { Level = level
+      Hash = "BlockHash"
+      Timestamp = DateTimeOffset.Now
+      ChainId = "chainId"
+      Operations = token }

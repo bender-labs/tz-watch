@@ -38,8 +38,17 @@ type SyncNode(node: TezosRpc, chainId: string) =
                                 .GetAsync()
                             |> Async.AwaitTask
 
+                        let! blockHeader =
+                            node.Blocks.[actualLevel].Header.GetAsync()
+                            |> Async.AwaitTask
+
+                        let blockHeader = Header.Parse(blockHeader.ToString())
+
                         yield
-                            { Level = actualLevel
+                            { Level = blockHeader.Level
+                              Hash = blockHeader.Hash
+                              ChainId = blockHeader.ChainId
+                              Timestamp = blockHeader.Timestamp
                               Operations = value }
 
                     yield! loop (Height(actualLevel + 1))

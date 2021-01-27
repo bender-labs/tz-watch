@@ -11,13 +11,19 @@ module Json =
     let private config =
         JsonSerializerSettings(ContractResolver = DefaultContractResolver(NamingStrategy = CamelCaseNamingStrategy()))
 
+
+
     type UpdateDto =
-        { Level: int
-          Hash: string
+        { Hash: string
           Type: string
           Payload: Map<String, Object> }
 
-
+    type BlockDto =
+        { Level: int
+          Hash: string
+          ChainId: string
+          Timestamp: DateTimeOffset
+          Updates: UpdateDto list }
 
     [<CLIMutable>]
     type SubscribeDto =
@@ -29,18 +35,33 @@ module Json =
     and InterestDto = { Type: string; Value: string }
 
     let private payload (update: Update) payloadType payload =
-        { Level = update.Level
-          Hash = update.Hash
+        { Hash = update.OperationHash
           Type = payloadType
           Payload = payload }
 
-    let private toDto (update: Update) =
-        match update.Value with
-        | EntryPointCall { Entrypoint = ep; Parameters = p } ->
-            payload update "entrypoint" (Map.empty<String, Object>.Add("name", ep).Add("parameters", p))
-        | _ -> failwith "Not yet"
+    let private toDto ({ BlockHeader = header
+                         Updates = updates }: EventLog) =
+        let updates =
+            updates
+            |> Seq.map (fun update ->
+                match update.Value with
+                | EntryPointCall { Entrypoint = ep; Parameters = p } ->
+                    payload
+                        update
+                        "entrypoint"
+                        (Map.empty<String, Object>
+                            .Add("name", ep)
+                            .Add("parameters", p))
+                | _ -> failwith "Not yet")
+            |> Seq.toList
 
-    let updateToJson (update: Update) =
+        { Level = int header.Level
+          Hash = header.Hash
+          Timestamp = header.Timestamp
+          ChainId = header.ChainId
+          Updates = updates }
+
+    let updateToJson (update: EventLog) =
         JsonConvert.SerializeObject(toDto update, config)
 
     let toSubscribe (dto: SubscribeDto) (channel: Channel): CreateSubscription =
