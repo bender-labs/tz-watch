@@ -21,7 +21,7 @@ type BlockHeader =
       Timestamp: DateTimeOffset
       ChainId: string }
 
-type OperationId = { OpgHash: string; Index: int }
+type OperationId = { OpgHash: string; Counter: int }
 
 type UpdateId =
     | Operation of OperationId
@@ -87,7 +87,7 @@ module Subscription =
 
         let operations =
             op.["contents"]
-            |> Seq.mapi (fun i e -> ({ OpgHash = hash; Index = i }, e))
+            |> Seq.map (fun  e -> ({ OpgHash = hash; Counter = e.Value("counter") }, e))
             |> Seq.filter (fun (_, e) -> isOperationValid e)
 
         let internalOperations =
@@ -100,7 +100,7 @@ module Subscription =
                     if not (isNull internals) then internals else JArray() :> JToken
 
                 r
-                |> Seq.mapi (fun i e -> (InternalOperation(index, i), e)))
+                |> Seq.map (fun  e -> (InternalOperation(index, e.Value("nonce")), e)))
             |> Seq.filter (fun (_, e) -> isInternalOpValid e)
 
         let operations =

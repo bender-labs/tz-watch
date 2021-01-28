@@ -57,7 +57,12 @@ module ``Subscription test`` =
                               .Operations
                               .SelectToken("$.[0].hash")
                               .ToString()
-                      Index = 0 }
+                      Counter =
+                          block
+                              .Operations
+                              .SelectToken("$.[0].contents.[0].counter")
+                              .ToString()
+                          |> int }
 
             update.UpdateId |> should equal expectedId
 
@@ -87,7 +92,7 @@ module ``Subscription test`` =
                                .Operations
                                .SelectToken("$.[0].hash")
                                .ToString()
-                       Index = 0 },
+                       Counter = block.Operations.SelectToken("$.[0].contents.[0].counter").ToString() |> int},
                      0)
 
             update.UpdateId |> should equal expectedId
