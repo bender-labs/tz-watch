@@ -4,3 +4,4 @@ FSharp.Core
 FSharpx.Extras
 FSharp.Control.Reactive
 FsToolkit.ErrorHandling
+Microsoft.SourceLink.GitHub

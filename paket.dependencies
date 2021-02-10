@@ -2,6 +2,7 @@ source https://api.nuget.org/v3/index.json
 
 nuget FSharp.Control.Reactive 4.4.2
 nuget FSharp.Core
+nuget altcover
 nuget FSharp.Data 3.3.3
 nuget FSharpx.Extras 2.5.0
 nuget FsToolkit.ErrorHandling 1.4.3
@@ -12,3 +13,26 @@ nuget Microsoft.NET.Test.Sdk 16.7.1
 nuget Netezos.rpc 1.1.2
 nuget System.Net.NameResolution 4.3.0
 nuget xunit.runner.visualstudio 2.4.3
+nuget Microsoft.SourceLink.GitHub 1.0.0 copy_local: true
+nuget Packaging.Targets 0.1.189
+
+// [ FAKE GROUP ]
+group Build
+    storage: none
+    source https://www.nuget.org/api/v2
+    source https://api.nuget.org/v3/index.json
+    nuget Fake.IO.FileSystem 5.20.4-alpha.1642
+    nuget Fake.Core.Target 5.20.4-alpha.1642
+    nuget Fake.Core.ReleaseNotes 5.20.4-alpha.1642
+    nuget FAKE.Core.Environment 5.20.4-alpha.1642
+    nuget Fake.DotNet.Cli 5.20.4-alpha.1642
+    nuget FAKE.Core.Process 5.20.4-alpha.1642
+    nuget Fake.DotNet.AssemblyInfoFile 5.20.4-alpha.1642
+    nuget Fake.Tools.Git 5.20.4-alpha.1642
+    nuget Fake.DotNet.Paket 5.20.4-alpha.1642
+    nuget Fake.Api.GitHub 5.20.4-alpha.1642
+    nuget Fake.BuildServer.AppVeyor 5.20.4-alpha.1642
+    nuget Fake.BuildServer.Travis 5.20.4-alpha.1642
+    nuget Fantomas
+    nuget Argu
+    nuget Fantomas.Extras

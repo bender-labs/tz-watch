@@ -8,7 +8,7 @@
     <Compile Include="Subscription.Test.fs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TzWatch.Lib\TzWatch.Lib.fsproj" />
+    <ProjectReference Include="..\..\src\TzWatch.Lib\TzWatch.Lib.fsproj" />
   </ItemGroup>
-  <Import Project="..\.paket\Paket.Restore.targets" />
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
