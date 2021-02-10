@@ -4,20 +4,20 @@ open System.Reflection
 
 [<assembly: AssemblyTitleAttribute("TzWatch.Lib")>]
 [<assembly: AssemblyProductAttribute("TzWatch")>]
-[<assembly: AssemblyVersionAttribute("0.0.1")>]
-[<assembly: AssemblyMetadataAttribute("ReleaseDate","2021-02-09T00:00:00.0000000+01:00")>]
-[<assembly: AssemblyFileVersionAttribute("0.0.1")>]
-[<assembly: AssemblyInformationalVersionAttribute("0.0.1")>]
-[<assembly: AssemblyMetadataAttribute("ReleaseChannel","alpha")>]
-[<assembly: AssemblyMetadataAttribute("GitHash","cc15b645f78033188ad66463deec982023f15d84")>]
+[<assembly: AssemblyVersionAttribute("0.0.5")>]
+[<assembly: AssemblyMetadataAttribute("ReleaseDate","2021-02-10T00:00:00.0000000+01:00")>]
+[<assembly: AssemblyFileVersionAttribute("0.0.5")>]
+[<assembly: AssemblyInformationalVersionAttribute("0.0.5")>]
+[<assembly: AssemblyMetadataAttribute("ReleaseChannel","release")>]
+[<assembly: AssemblyMetadataAttribute("GitHash","589b265c815e346bcf3db0442c499032c1dfbdd3")>]
 do ()
 
 module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyTitle = "TzWatch.Lib"
     let [<Literal>] AssemblyProduct = "TzWatch"
-    let [<Literal>] AssemblyVersion = "0.0.1"
-    let [<Literal>] AssemblyMetadata_ReleaseDate = "2021-02-09T00:00:00.0000000+01:00"
-    let [<Literal>] AssemblyFileVersion = "0.0.1"
-    let [<Literal>] AssemblyInformationalVersion = "0.0.1"
-    let [<Literal>] AssemblyMetadata_ReleaseChannel = "alpha"
-    let [<Literal>] AssemblyMetadata_GitHash = "cc15b645f78033188ad66463deec982023f15d84"
+    let [<Literal>] AssemblyVersion = "0.0.5"
+    let [<Literal>] AssemblyMetadata_ReleaseDate = "2021-02-10T00:00:00.0000000+01:00"
+    let [<Literal>] AssemblyFileVersion = "0.0.5"
+    let [<Literal>] AssemblyInformationalVersion = "0.0.5"
+    let [<Literal>] AssemblyMetadata_ReleaseChannel = "release"
+    let [<Literal>] AssemblyMetadata_GitHash = "589b265c815e346bcf3db0442c499032c1dfbdd3"
