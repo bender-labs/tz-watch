@@ -4,6 +4,7 @@ open System
 open FSharp.Control
 open FSharpx.Control
 open Netezos.Rpc
+open Newtonsoft.Json.Linq
 open TzWatch.Domain
 open TzWatch.Node.Types
 
@@ -18,7 +19,6 @@ type SyncNode(node: TezosRpc, chainId: string) =
                     let! head =
                         node.Blocks.Head.Header.GetAsync()
                         |> Async.AwaitTask
-
 
                     let header = Header.Parse(head.ToString())
                     if header.ChainId <> chainId then failwith "Invalid Chain"
@@ -37,6 +37,7 @@ type SyncNode(node: TezosRpc, chainId: string) =
                             node.Blocks.[actualLevel].Operations.[3]
                                 .GetAsync()
                             |> Async.AwaitTask
+                            |> Async.map (fun v -> JToken.Parse(v.ToString()))
 
                         let! blockHeader =
                             node.Blocks.[actualLevel].Header.GetAsync()

@@ -15,10 +15,6 @@
     <Compile Include="Program\MainLoop.fs" />
     <Compile Include="Adapters\Json.fs" />
     <Compile Include="Program.fs" />
-    <Content Include="appsettings.Development.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Properties\launchSettings.json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\TzWatch.Lib\TzWatch.Lib.fsproj" />

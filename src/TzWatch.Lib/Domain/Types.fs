@@ -1,13 +1,12 @@
 namespace TzWatch.Domain
 
 open System
+open Newtonsoft.Json.Linq
 
 [<AutoOpen>]
 module Types =
 
-    open System.Reactive.Subjects
     open FSharp.Control
-    open Newtonsoft.Json.Linq
 
     type Block = {
         Level: int
