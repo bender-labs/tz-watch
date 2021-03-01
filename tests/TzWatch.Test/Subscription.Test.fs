@@ -26,17 +26,17 @@ module ``Subscription test`` =
 
         [<Fact>]
         let ``should not give update on other contract`` () =
-            let log =
+            let (_, u) =
                 Subscription.applyBlock subscription (blockWithContractAndEntryPoint "Other" "mint")
 
-            log |> hasValue |> should equal false
+            u.Updates |> Seq.length |> should equal 0
 
         [<Fact>]
         let ``should not give update on other entrypoint`` () =
-            let log =
+            let (_, u) =
                 Subscription.applyBlock subscription (blockWithContractAndEntryPoint "KT" "burn")
 
-            log |> hasValue |> should equal false
+            u.Updates |> Seq.length |> should equal 0
 
         [<Fact>]
         let ``should give update when entrypoint and contract match`` () =
@@ -45,7 +45,7 @@ module ``Subscription test`` =
 
             let (_, updates) =
                 Subscription.applyBlock subscription block
-                |> value
+                
 
             updates.Updates |> Seq.length |> should equal 1
             let update = updates.Updates |> Seq.head
@@ -80,7 +80,6 @@ module ``Subscription test`` =
 
             let (_, updates) =
                 Subscription.applyBlock subscription block
-                |> value
 
             updates.Updates |> Seq.length |> should equal 1
             let update = updates.Updates |> Seq.head
@@ -110,16 +109,16 @@ module ``Subscription test`` =
         let ``should ignore transfer`` () =
             let block = blockWithContractTransfer 0 "KT"
 
-            let log =
+            let (_, u) =
                 Subscription.applyBlock subscription block
 
-            log |> hasValue |> should equal false
+            u.Updates |> Seq.length |> should equal 0
 
         [<Fact>]
         let ``should ignore failed operations`` () =
             let block = blockWithRejectedOperations "KT" "mint"
 
-            let log =
+            let (_, u) =
                 Subscription.applyBlock subscription block
 
-            log |> hasValue |> should equal false
+            u.Updates |> Seq.length |> should equal 0

@@ -32,7 +32,11 @@ module CommandHandler =
                   Confirmations = 0u }
 
             let w =
-                Subscription.run poller (Level.ToLevel command.Level) parameters
+                Subscription.run
+                    poller
+                    ({ Level = Level.ToLevel command.Level
+                       YieldEmpty = false })
+                    parameters
                 |> AsyncSeq.iterAsync command.Channel
 
             let token = new CancellationTokenSource()

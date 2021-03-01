@@ -48,6 +48,8 @@ type EventLog =
     { BlockHeader: BlockHeader
       Updates: Update seq }
 
+type CatchupOptions = { Level: Level; YieldEmpty: Boolean }
+
 module Subscription =
     let private check (interests: Interest list) (operation: JToken) =
         interests
@@ -87,7 +89,10 @@ module Subscription =
 
         let operations =
             op.["contents"]
-            |> Seq.map (fun  e -> ({ OpgHash = hash; Counter = e.Value("counter") }, e))
+            |> Seq.map (fun e ->
+                ({ OpgHash = hash
+                   Counter = e.Value("counter") },
+                 e))
             |> Seq.filter (fun (_, e) -> isOperationValid e)
 
         let internalOperations =
@@ -100,7 +105,7 @@ module Subscription =
                     if not (isNull internals) then internals else JArray() :> JToken
 
                 r
-                |> Seq.map (fun  e -> (InternalOperation(index, e.Value("nonce")), e)))
+                |> Seq.map (fun e -> (InternalOperation(index, e.Value("nonce")), e)))
             |> Seq.filter (fun (_, e) -> isInternalOpValid e)
 
         let operations =
@@ -115,33 +120,32 @@ module Subscription =
 
         r
 
-    let applyBlock (s: SubscriptionParameters) (block: Block): (SubscriptionParameters * EventLog) option =
+    let applyBlock (s: SubscriptionParameters) (block: Block): (SubscriptionParameters * EventLog) =
         let updates =
             block.Operations
             |> Seq.map (applyOperation s)
             |> Seq.concat
 
-        if updates |> Seq.length > 0 then
-            let t =
-                { BlockHeader =
-                      { Level = bigint block.Level
-                        Hash = block.Hash
-                        Timestamp = block.Timestamp
-                        ChainId = block.ChainId }
-                  Updates = updates }
+        let t =
+            { BlockHeader =
+                  { Level = bigint block.Level
+                    Hash = block.Hash
+                    Timestamp = block.Timestamp
+                    ChainId = block.ChainId }
+              Updates = updates }
 
-            Some(s, t)
-        else
-            None
+        s, t
 
 
-    let run (poller: ISync) (level: Level) (subscription: SubscriptionParameters) =
+    let run (poller: ISync) (options: CatchupOptions) (subscription: SubscriptionParameters) =
         let polling =
-            poller.CatchupFrom level subscription.Confirmations
+            poller.CatchupFrom options.Level subscription.Confirmations
 
         let handler = applyBlock subscription
 
         polling
         |> AsyncSeq.map handler
-        |> AsyncSeq.choose id
+        |> AsyncSeq.filter (fun (_, u) ->
+            (options.YieldEmpty
+             || (u.Updates |> Seq.length) > 0))
         |> AsyncSeq.map snd
