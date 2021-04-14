@@ -12,6 +12,14 @@ module OperationGroupParser =
 
         let value = JsonValue.Load(reader)
 
+        let (|EpCall|_|) (op: JsonValue) =
+            if op?kind.AsString() <> "transaction" then
+                None
+            else
+                match op.TryGetProperty "parameters" with
+                | Some _ -> Some op
+                | None -> None
+
         let extractParameters (v: JsonValue) =
             let stringWriter = new StringWriter()
 
@@ -42,30 +50,31 @@ module OperationGroupParser =
                 | Some internals ->
                     internals.AsArray()
                     |> Seq.map (fun i ->
-                        let nonce = i?nonce.AsInteger()
-                        let status = i?result?status.AsString()
-                        toOperation (InternalOperation(id, nonce)) status i)
+                        match i with
+                        | EpCall _ ->
+                            let nonce = i?nonce.AsInteger()
+                            let status = i?result?status.AsString()
+                            Some(toOperation (InternalOperation(id, nonce)) status i)
+                        | _ -> None)
+                    |> Seq.choose Operators.id
                     |> Seq.toList
-
                 | None -> []
 
             (meta?operation_result?status.AsString(), internalOps)
 
         let parseOp (hash: string) (operation: JsonValue): Operation list =
-            if operation?kind.AsString() <> "transaction" then
-                []
-            else
-                match operation.TryGetProperty "parameters" with
-                | Some _ ->
-                    let id =
-                        { OpgHash = hash
-                          Counter = operation?counter.AsInteger() }
+            match operation with
+            | EpCall _ ->
+                let id =
+                    { OpgHash = hash
+                      Counter = operation?counter.AsInteger() }
 
-                    let (status, internalOps) = parseMetadata id operation
+                let (status, internalOps) = parseMetadata id operation
 
-                    (toOperation (Operation id) status operation)
-                    :: internalOps
-                | None -> []
+                (toOperation (Operation id) status operation)
+                :: internalOps
+            | _ -> []
+
 
 
         let parseOpg (v: JsonValue) =
