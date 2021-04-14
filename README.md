@@ -25,7 +25,7 @@ TzWatch.Lib | [![NuGet Badge](https://buildstats.info/nuget/tzwatch.lib)](https:
 
 # WebServer 
 
-Run : `run project : `dotnet run --project TzWatch.Http`
+Run : `run project : `dotnet run --project src/TzWatch.Http`
 
 ## Test web server with with curl
 

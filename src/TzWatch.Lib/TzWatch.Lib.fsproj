@@ -10,6 +10,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Domain\Types.fs" />
+    <Compile Include="Domain\OperationParser.fs" />
     <Compile Include="Domain\Subscription.fs" />
     <Content Include="Node\data\content.json" />
     <Content Include="Node\data\header.json" />

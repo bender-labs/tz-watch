@@ -64,7 +64,7 @@ type MainLoop(poller: ISync, log: ILogger<MainLoop>) =
                             | Ok (id, token) ->
                                 r.Reply id
                                 state.Add(id, token)
-                            | Error e ->
+                            | Result.Error e ->
                                 log.LogError("Error {e}", [ e ])
                                 state
                         | Cancel id ->

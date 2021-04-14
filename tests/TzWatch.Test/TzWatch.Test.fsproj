@@ -6,6 +6,10 @@
     <Content Include="paket.references" />
     <Compile Include="Data.fs" />
     <Compile Include="Subscription.Test.fs" />
+    <Compile Include="OperationParser.Test.fs" />
+    <Content Include="sample\big_block.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\TzWatch.Lib\TzWatch.Lib.fsproj" />

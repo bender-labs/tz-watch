@@ -1,14 +1,10 @@
 namespace TzWatch.Domain
 
 open System
-open Newtonsoft.Json.Linq
 open FSharp.Control
 open FSharpx.Collections
 
-type Interest =
-    | EntryPoint of string
-    | Balance
-    | Storage
+type Interest = EntryPoint of string
 
 type SubscriptionParameters =
     { Contract: ContractAddress
@@ -21,23 +17,17 @@ type BlockHeader =
       Timestamp: DateTimeOffset
       ChainId: string }
 
-type OperationId = { OpgHash: string; Counter: int }
-
-type UpdateId =
-    | Operation of OperationId
-    | InternalOperation of OperationId * int
-
 type Update =
     { UpdateId: UpdateId
       Value: UpdateValue }
 
 and EntryPointCall =
     { Entrypoint: string
-      Parameters: JToken }
+      Parameters: string }
 
 and BalanceUpdate = { Former: uint64; Updated: uint64 }
 
-and StorageUpdate = { Diff: JToken }
+and StorageUpdate = { Diff: string }
 
 and UpdateValue =
     | EntryPointCall of EntryPointCall
@@ -51,71 +41,25 @@ type EventLog =
 type CatchupOptions = { Level: Level; YieldEmpty: Boolean }
 
 module Subscription =
-    let private check (interests: Interest list) (operation: JToken) =
+    let private check (interests: Interest list) (operation: Operation) =
         interests
         |> List.fold (fun acc i ->
             acc
-            || match i with
-               | EntryPoint v ->
-                   not (isNull operation.["parameters"])
-                   && operation.["parameters"].["entrypoint"]
-                       .Value<string>() = v
-               | _ -> false
+            || match i, operation.Kind with
+               | EntryPoint v, SmartContractCall ({ Entrypoint = ep }) -> ep = v) false
 
-            ) false
+    let private toUpdate (operation: Operation) =
+        match operation.Kind with
+        | SmartContractCall { Entrypoint = ep; Parameters = p } ->
+            { UpdateId = operation.Id
+              Value = EntryPointCall { Entrypoint = ep; Parameters = p } }
 
-    let private toUpdate (id, (operation: JToken)) =
-        { UpdateId = id
-          Value =
-              EntryPointCall
-                  { Entrypoint =
-                        operation
-                            .SelectToken("parameters.entrypoint")
-                            .Value<string>()
-                    Parameters = operation.SelectToken("parameters.value") } }
-
-    let private applyOperation (s: SubscriptionParameters) (op: JToken) =
-        let isOperationValid (e: JToken) =
-            e
-                .SelectToken("metadata.operation_result.status")
-                .Value<string>() = "applied"
-            && e.Value("kind") = "transaction"
-
-        let isInternalOpValid (e: JToken) =
-            e.SelectToken("result.status").Value<string>() = "applied"
-            && e.Value("kind") = "transaction"
-
-        let hash: string = op.Value("hash")
-
-        let operations =
-            op.["contents"]
-            |> Seq.map (fun e ->
-                ({ OpgHash = hash
-                   Counter = e.Value("counter") },
-                 e))
-            |> Seq.filter (fun (_, e) -> isOperationValid e)
-
-        let internalOperations =
-            operations
-            |> Seq.collect (fun (index, e) ->
-                let internals =
-                    e.["metadata"].["internal_operation_results"]
-
-                let r =
-                    if not (isNull internals) then internals else JArray() :> JToken
-
-                r
-                |> Seq.map (fun e -> (InternalOperation(index, e.Value("nonce")), e)))
-            |> Seq.filter (fun (_, e) -> isInternalOpValid e)
-
-        let operations =
-            operations
-            |> Seq.map (fun (i, e) -> (Operation i, e))
-
+    let private applyOperation (s: SubscriptionParameters) (op: OperationGroup) =
         let r =
-            Seq.append operations internalOperations
-            |> Seq.filter (fun (_, e) -> e.Value("destination") = (ContractAddress.value s.Contract))
-            |> Seq.filter (fun (_, e) -> check s.Interests e)
+            op.Operations
+            |> Seq.filter (fun o -> o.Destination = (ContractAddress.value s.Contract))
+            |> Seq.filter (fun o -> o.Status = OperationStatus.Applied)
+            |> Seq.filter (check s.Interests)
             |> Seq.map toUpdate
 
         r

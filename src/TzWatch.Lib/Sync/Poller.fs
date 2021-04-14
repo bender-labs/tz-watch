@@ -1,10 +1,10 @@
 module TzWatch.Sync
 
 open System
+open System.IO
 open FSharp.Control
 open FSharpx.Control
 open Netezos.Rpc
-open Newtonsoft.Json.Linq
 open TzWatch.Domain
 open TzWatch.Node.Types
 
@@ -37,7 +37,7 @@ type SyncNode(node: TezosRpc, chainId: string) =
                             node.Blocks.[actualLevel].Operations.[3]
                                 .GetAsync()
                             |> Async.AwaitTask
-                            |> Async.map (fun v -> JToken.Parse(v.ToString()))
+                            |> Async.map (fun v -> OperationGroupParser.parse (new StringReader(v.ToString())))
 
                         let! blockHeader =
                             node.Blocks.[actualLevel].Header.GetAsync()

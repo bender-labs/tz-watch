@@ -1,20 +1,48 @@
 namespace TzWatch.Domain
 
 open System
-open Newtonsoft.Json.Linq
 
 [<AutoOpen>]
 module Types =
 
     open FSharp.Control
 
-    type Block = {
-        Level: int
-        Hash: string
-        Timestamp: DateTimeOffset
-        ChainId: string
-        Operations: JToken
-    }
+    type OperationId = { OpgHash: string; Counter: int }
+
+    type UpdateId =
+        | Operation of OperationId
+        | InternalOperation of OperationId * int
+
+    type OperationStatus =
+        | Applied
+        | Error
+
+    type SmartContractCall =
+        { Entrypoint: string
+          Parameters: string }
+
+    type OperationKind = SmartContractCall of SmartContractCall
+
+    type Operation =
+        { Kind: OperationKind
+          Id: UpdateId
+          Source: string
+          Destination: string
+          Status: OperationStatus }
+
+    type OperationGroup =
+        { ChainId: string
+          Hash: string
+          Branch: string
+          Operations: Operation seq }
+
+
+    type Block =
+        { Level: int
+          Hash: string
+          Timestamp: DateTimeOffset
+          ChainId: string
+          Operations: OperationGroup seq }
 
     type Level =
         | Head
@@ -32,7 +60,7 @@ module Types =
     module ContractAddress =
 
         let create value =
-            if String.IsNullOrEmpty(value) then Error "Bad Address" else Ok(ContractAddress value)
+            if String.IsNullOrEmpty(value) then Result.Error "Bad Address" else Ok(ContractAddress value)
 
         let createUnsafe value = ContractAddress value
 
