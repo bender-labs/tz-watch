@@ -14,7 +14,7 @@ open TzWatch.Http.Adapters.Json
 open TzWatch.Http.Program
 open TzWatch.Sync
 open TzWatch.Domain
-open FSharp.Control.Tasks.V2.ContextInsensitive
+open FSharp.Control.Tasks
 
 let wait handle =
     let tsc = TaskCompletionSource<unit>()
@@ -49,12 +49,11 @@ let pocJson (payload: SubscribeDto) (_: HttpFunc) (ctx: HttpContext) =
     }
 
 let endpoints =
-    [ GET => route "/ping" (text "pong")
-      POST
-      => route
-          "/subscriptions"
-             (setHttpHeader "Content-Type" "text/event-stream"
-              >=> (bindJson<SubscribeDto> pocJson)) ]
+    [ GET [ route "/ping" (text "pong") ]
+      POST [ route
+                 "/subscriptions"
+                 (setHttpHeader "Content-Type" "text/event-stream"
+                  >=> (bindJson<SubscribeDto> pocJson)) ] ]
 
 
 let configureApp (app: IApplicationBuilder) =

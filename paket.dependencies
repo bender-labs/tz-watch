@@ -6,7 +6,7 @@ nuget FSharp.Data 4.0.1
 nuget FSharpx.Extras 3.0.0
 nuget FsToolkit.ErrorHandling 2.1.2
 nuget FsUnit.xUnit
-nuget Giraffe 5.0.0-alpha-003 alpha
+nuget Giraffe 5.0.0
 nuget Microsoft.Extensions.Hosting.WindowsServices 5.0.1
 nuget Microsoft.NET.Test.Sdk 16.9.4
 nuget Netezos
@@ -30,7 +30,6 @@ group Build
     nuget Fake.Tools.Git 5.20.4
     nuget Fake.DotNet.Paket 5.20.4
     nuget Fake.Api.GitHub 5.20.4
-    nuget Fake.BuildServer.AppVeyor 5.20.4
-    nuget Fake.BuildServer.Travis 5.20.4
+    nuget Fake.BuildServer.GitHubActions 5.20.4
     nuget Argu
     nuget Fantomas.Extras
